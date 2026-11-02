@@ -135,6 +135,21 @@ const API = {
       };
     }
 
+    // 1.1 Save API Key
+    if (endpoint.includes("/api/system/save-key")) {
+      const provider = body.provider || "gemini";
+      const key = body.api_key || "";
+      if (provider === "gemini") {
+        localStorage.setItem("nexora_gemini_key", key);
+      } else {
+        localStorage.setItem(`nexora_${provider}_key`, key);
+      }
+      return {
+        success: true,
+        message: `Đã kết nối và lưu khóa API ${provider.toUpperCase()} thành công!`
+      };
+    }
+
     // 2. Auth Login
     if (endpoint.includes("/api/auth/login")) {
       const ident = (body.identifier || "").toLowerCase();

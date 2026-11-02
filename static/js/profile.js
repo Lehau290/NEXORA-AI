@@ -129,9 +129,11 @@ const Profile = {
       const openaiStatus = document.getElementById("status-key-openai");
       const anthropicStatus = document.getElementById("status-key-anthropic");
 
+      const localGemini = localStorage.getItem("nexora_gemini_key");
+      const isGeminiReady = res.keys_configured?.gemini || !!localGemini;
       if (geminiStatus) {
-        geminiStatus.className = `text-[11px] font-semibold ${res.keys_configured?.gemini ? 'text-emerald-400' : 'text-amber-400'}`;
-        geminiStatus.textContent = res.keys_configured?.gemini ? "✓ Đã sẵn sàng" : "⚠️ Chưa cấu hình";
+        geminiStatus.className = `text-[11px] font-semibold ${isGeminiReady ? 'text-emerald-400' : 'text-amber-400'}`;
+        geminiStatus.textContent = isGeminiReady ? "✓ Đã sẵn sàng (Hoạt động)" : "⚠️ Chưa cấu hình";
       }
       if (openaiStatus) {
         openaiStatus.className = `text-[11px] font-semibold ${res.keys_configured?.openai ? 'text-emerald-400' : 'text-slate-500'}`;
@@ -155,9 +157,15 @@ const Profile = {
       return;
     }
 
+    if (provider === "gemini") {
+      localStorage.setItem("nexora_gemini_key", apiKey);
+    } else {
+      localStorage.setItem(`nexora_${provider}_key`, apiKey);
+    }
+
     try {
       const res = await API.post("/api/system/save-key", { provider, api_key: apiKey });
-      showToast(res.message, "success");
+      showToast(res.message || "Đã lưu khóa API thành công!", "success");
       document.getElementById("input-key-secret").value = "";
       await this.checkCurrentKeys();
       // Hide banner if was visible
