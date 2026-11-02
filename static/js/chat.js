@@ -308,10 +308,10 @@ const Chat = {
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-1.5">
           <span class="text-xs font-bold text-[#7C5CFC]">${this.currentAgent?.name || "NEXORA AI"}</span>
-          <span class="text-[11px] text-slate-500">Đang suy nghĩ...</span>
+          <span class="text-[11px] text-slate-500 ai-status-text">Đang suy nghĩ...</span>
         </div>
         <div id="ai-live-bubble" class="markdown-body p-4 rounded-2xl rounded-tl-sm bg-[#151923] border border-white/5 text-slate-200 text-[15px] leading-relaxed break-words streaming-cursor">
-          <div class="flex items-center gap-2 text-xs text-slate-400 thinking-pulse">
+          <div id="ai-thinking-box" class="flex items-center gap-2 text-xs text-slate-400 thinking-pulse">
             <span class="w-2 h-2 rounded-full bg-[#7C5CFC] animate-ping"></span>
             <span>AI đang phân tích yêu cầu và tổng hợp dữ liệu...</span>
           </div>
@@ -386,6 +386,7 @@ const Chat = {
               citations = dataJson.citations;
             }
           } else if (eventType === "chunk") {
+            this.clearThinking(liveBubble);
             accumulatedText += dataJson.text;
             if (liveBubble) {
               liveBubble.innerHTML = this.parseMarkdown(accumulatedText);
@@ -408,8 +409,20 @@ const Chat = {
     }
   },
 
+  clearThinking(liveBubble) {
+    if (!liveBubble) return;
+    const thinking = liveBubble.querySelector("#ai-thinking-box") || document.getElementById("ai-thinking-box");
+    if (thinking) thinking.remove();
+    const parent = liveBubble.closest(".flex-1");
+    if (parent) {
+      const statusEl = parent.querySelector(".ai-status-text");
+      if (statusEl) statusEl.textContent = "Vừa xong";
+    }
+  },
+
   finishStreaming(liveBubble) {
     this.isStreaming = false;
+    this.clearThinking(liveBubble);
     if (liveBubble) {
       liveBubble.classList.remove("streaming-cursor");
     }
@@ -447,6 +460,7 @@ const Chat = {
           const decoder = new TextDecoder("utf-8");
           let accText = "";
           let buf = "";
+          let hasCleared = false;
 
           while (true) {
             const { value, done } = await reader.read();
@@ -464,6 +478,11 @@ const Chat = {
                   const parsed = JSON.parse(dataStr);
                   const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
                   if (text) {
+                    if (!hasCleared) {
+                      this.clearThinking(liveBubble);
+                      if (liveBubble) liveBubble.innerHTML = "";
+                      hasCleared = true;
+                    }
                     accText += text;
                     if (liveBubble) {
                       liveBubble.innerHTML = this.parseMarkdown(accText);
@@ -474,15 +493,18 @@ const Chat = {
               }
             }
           }
-          return;
+          if (accText.trim()) return;
         }
       } catch (e) {
         console.warn("Direct Gemini stream failed, falling back to instant engine:", e);
       }
     }
 
-    // 2. High-Intelligence Universal Generative AI Stream (OpenAI-compatible, no key required)
+    // 2. High-Intelligence Universal Generative AI Stream with 2.2s Timeout
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2200);
+
       const messages = [];
       if (this.currentAgent?.system_instructions) {
         messages.push({ role: "system", content: this.currentAgent.system_instructions });
@@ -492,18 +514,21 @@ const Chat = {
       const res = await fetch("https://text.pollinations.ai/openai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
         body: JSON.stringify({
           messages: messages,
           model: "openai",
           stream: true
         })
       });
+      clearTimeout(timeoutId);
 
       if (res.ok) {
         const reader = res.body.getReader();
         const decoder = new TextDecoder("utf-8");
         let accText = "";
         let buf = "";
+        let hasCleared = false;
 
         while (true) {
           const { value, done } = await reader.read();
@@ -522,6 +547,11 @@ const Chat = {
                 const parsed = JSON.parse(dataStr);
                 const delta = parsed.choices?.[0]?.delta?.content || "";
                 if (delta) {
+                  if (!hasCleared) {
+                    this.clearThinking(liveBubble);
+                    if (liveBubble) liveBubble.innerHTML = "";
+                    hasCleared = true;
+                  }
                   accText += delta;
                   if (liveBubble) {
                     liveBubble.innerHTML = this.parseMarkdown(accText);
@@ -538,10 +568,14 @@ const Chat = {
         }
       }
     } catch (e) {
-      console.warn("Universal AI stream failed, falling back to instant engine:", e);
+      console.warn("Universal AI stream aborted or failed, switching to instant engine:", e);
     }
 
     // 3. Fallback High-speed intelligent local reasoning engine
+    // ALWAYS CLEAR thinking aura and status text immediately before answering
+    this.clearThinking(liveBubble);
+    if (liveBubble) liveBubble.innerHTML = "";
+
     const fullText = this.generateSmartResponse(prompt);
     const words = fullText.split(/(\s+)/);
     let currentText = "";
@@ -579,6 +613,68 @@ const Chat = {
     // "bạn có thể trả lời câu hỏi của tôi được không"
     if (p.includes("trả lời") || p.includes("có thể") || p.includes("giúp") || p.includes("chào")) {
       return `**Chào bạn! Tôi hoàn toàn có thể trả lời câu hỏi và hỗ trợ bạn.** 🚀\n\nTôi là **${agent.name}** – trợ lý trí tuệ nhân tạo chuyên trách thuộc nền tảng **NEXORA AI** (*${agent.role_desc}*).\n\n### Những lĩnh vực tôi có thể hỗ trợ bạn ngay bây giờ:\n1. 💻 **Lập trình & Kỹ thuật**: Viết code, debug, giải thích thuật toán (Python, JS, Go, Rust, C++).\n2. 🔬 **Nghiên cứu & Học tập**: Giải thích kiến thức từ cơ bản tới nâng cao (phương pháp Feynman).\n3. ✍️ **Soạn thảo & Biên tập**: Viết email doanh nghiệp, báo cáo, bài viết truyền thông.\n4. 📊 **Phân tích dữ liệu**: Đọc số liệu bảng, tính toán ROI, điểm hòa vốn.\n5. 🚀 **Multi-Agent Workflow**: Phối hợp cùng lúc 5 AI Agents để hoàn thành một dự án lớn.\n\nBạn hãy gửi câu hỏi hoặc nhiệm vụ cụ thể của bạn, tôi sẽ phân tích và phản hồi ngay lập tức!`;
+    }
+
+    // C / C++ curriculum & lesson queries
+    if (p.includes("c++") || p.includes("cpp") || p.includes("c / c++") || p.includes("ngôn ngữ c")) {
+      return `### 📘 Lộ Trình Học Lập Trình C++ Toàn Diện (Từ Cơ Bản Đến Nâng Cao)
+
+Chương trình học C++ chuẩn đại học và ứng dụng thực tế thường được chia thành **12 chuyên đề (bài học) cốt lõi**:
+
+---
+
+#### 🟢 Giai đoạn 1: C++ Căn Bản (Bài 1 – Bài 6)
+1. **Bài 1: Tổng quan về C++ & Môi trường lập trình**:
+   - Cài đặt trình biên dịch GCC/G++, Visual Studio Code, CLion hoặc Code::Blocks.
+   - Cấu trúc chương trình C++ đầu tiên: \`#include <iostream>\`, hàm \`main()\`, lệnh xuất \`std::cout\`.
+2. **Bài 2: Biến, Kiểu dữ liệu & Nhập xuất chuẩn**:
+   - Các kiểu dữ liệu cơ bản: \`int\`, \`float\`, \`double\`, \`char\`, \`bool\`.
+   - Nhập dữ liệu từ bàn phím với \`std::cin\`, xử lý trôi lệnh với \`cin.ignore()\`.
+3. **Bài 3: Toán tử & Biểu thức điều kiện**:
+   - Toán tử số học (\`+\`, \`-\`, \`*\`, \`/\`, \`%\`), logic (\`&&\`, \`||\`, \`!\`), so sánh.
+   - Cấu trúc rẽ nhánh: \`if - else if - else\`, \`switch - case\`, toán tử 3 ngôi \`? :\`.
+4. **Bài 4: Vòng lặp & Điều khiển luồng**:
+   - Vòng lặp \`for\`, \`while\`, \`do - while\`.
+   - Lệnh điều khiển: \`break\` (thoát lặp), \`continue\` (bỏ qua bước lặp).
+5. **Bài 5: Hàm trong C++ (Functions)**:
+   - Khai báo và định nghĩa hàm, giá trị trả về.
+   - Truyền tham trị (\`pass-by-value\`) và truyền tham chiếu (\`pass-by-reference\` dùng \`&\`).
+   - Nạp chồng hàm (\`Function Overloading\`).
+6. **Bài 6: Mảng (Arrays) & Chuỗi ký tự (Strings)**:
+   - Mảng 1 chiều, mảng 2 chiều (ma trận).
+   - Xử lý chuỗi hiện đại với thư viện \`std::string\` (các phương thức \`size()\`, \`substr()\`, \`find()\`).
+
+---
+
+#### 🟡 Giai đoạn 2: C++ Trung Cấp & Bộ Nhớ (Bài 7 – Bài 9)
+7. **Bài 7: Con trỏ & Quản lý bộ nhớ động (Pointers & Dynamic Memory)**:
+   - Bản chất ô nhớ, địa chỉ biến (\`&\`), con trỏ (\`*\`).
+   - Cấp phát bộ nhớ động với toán tử \`new\` và giải phóng bộ nhớ với \`delete\`.
+   - Con trỏ vô hiệu (\`nullptr\`) và lỗi rò rỉ bộ nhớ (\`memory leak\`).
+8. **Bài 8: Kiểu dữ liệu cấu trúc (Struct & Enum)**:
+   - Tạo kiểu dữ liệu tự định nghĩa với \`struct\`.
+   - Mảng các cấu trúc, con trỏ trỏ tới struct (\`->\`).
+9. **Bài 9: Thao tác với Tệp tin (File I/O)**:
+   - Đọc và ghi tệp tin với thư viện \`<fstream>\`: \`std::ifstream\` (đọc file), \`std::ofstream\` (ghi file).
+
+---
+
+#### 🔴 Giai đoạn 3: Hướng Đối Tượng & STL Chuẩn (Bài 10 – Bài 12)
+10. **Bài 10: Lập trình hướng đối tượng (OOP in C++)**:
+    - **Class & Object**: Thuộc tính (Attributes) & Phương thức (Methods).
+    - Bộ chỉ định truy cập: \`public\`, \`private\`, \`protected\`.
+    - Constructor (Hàm khởi tạo), Destructor (Hàm hủy).
+    - 4 tính chất OOP: **Đóng gói** (Encapsulation), **Kế thừa** (Inheritance), **Đa hình** (Polymorphism - \`virtual\`), **Trừu tượng** (Abstraction).
+11. **Bài 11: Thư viện mẫu chuẩn STL (Standard Template Library)**:
+    - Các container phổ biến: \`std::vector\`, \`std::pair\`, \`std::map\`, \`std::set\`, \`std::stack\`, \`std::queue\`.
+    - Các thuật toán có sẵn: \`std::sort()\`, \`std::binary_search()\`, \`std::reverse()\`.
+12. **Bài 12: Xử lý ngoại lệ & Mẫu hàm (Templates & Exception Handling)**:
+    - Bắt lỗi với khối \`try - catch\`.
+    - Hàm mẫu (\`Function Template\`) và Lớp mẫu (\`Class Template\`).
+
+---
+
+💡 *Bạn muốn bắt đầu học chi tiết bài nào trước, hoặc cần bài tập thực hành mẫu về phần nào? Hãy nhắn cho tôi nhé!*`;
     }
 
     // Code requests
