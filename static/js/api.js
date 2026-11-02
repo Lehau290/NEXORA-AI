@@ -241,6 +241,19 @@ const API = {
       };
     }
 
+    // 4.1 Update Profile
+    if (endpoint.includes("/api/auth/update-profile")) {
+      const user = this.getUser() || { id: 3, full_name: "Lê Trung Hậu", email: "letrunghau@nexora.ai" };
+      if (body.full_name) user.full_name = body.full_name;
+      if (body.avatar) user.avatar = body.avatar;
+      this.setUser(user);
+      return {
+        success: true,
+        message: "Cập nhật hồ sơ tài khoản thành công!",
+        user
+      };
+    }
+
     // 5. Categories
     if (endpoint.includes("/api/agents/categories")) {
       return {

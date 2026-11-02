@@ -244,7 +244,13 @@ const App = {
       const planEls = document.querySelectorAll(".current-user-plan");
 
       nameEls.forEach(el => el.textContent = user.full_name);
-      avatarEls.forEach(el => el.textContent = user.avatar || "👤");
+      avatarEls.forEach(el => {
+        if (user.avatar && (user.avatar.startsWith("data:image/") || user.avatar.startsWith("http") || user.avatar.startsWith("/uploads/"))) {
+          el.innerHTML = `<img src="${user.avatar}" alt="Avatar" class="w-full h-full object-cover rounded-full">`;
+        } else {
+          el.textContent = user.avatar || "👤";
+        }
+      });
       planEls.forEach(el => el.textContent = user.plan || "Free");
 
       if (user.role === "admin") {

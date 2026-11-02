@@ -198,9 +198,13 @@ const Chat = {
     const user = API.getUser() || { full_name: "Lê Trung Hậu", avatar: "👨‍💻" };
     const div = document.createElement("div");
     div.className = "flex gap-4 max-w-3xl mx-auto w-full group mb-6 px-4";
+    const avatarHtml = (user.avatar && (user.avatar.startsWith("data:image/") || user.avatar.startsWith("http") || user.avatar.startsWith("/uploads/")))
+      ? `<img src="${user.avatar}" alt="Avatar" class="w-full h-full object-cover rounded-xl">`
+      : (user.avatar || "👤");
+
     div.innerHTML = `
-      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center text-sm font-semibold flex-shrink-0 shadow-md">
-        ${user.avatar || "👤"}
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center text-sm font-semibold flex-shrink-0 shadow-md overflow-hidden">
+        ${avatarHtml}
       </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 mb-1.5">
