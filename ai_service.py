@@ -267,9 +267,66 @@ class AnthropicProvider(BaseAIProvider):
         except requests.exceptions.RequestException as e:
             raise AIProviderException(f"Lỗi Anthropic: {str(e)}")
 
+class FreeUniversalAIProvider(BaseAIProvider):
+    """Free Universal Generative AI Provider with high intelligence and real streaming.
+    Answers any question in all languages, coding, mathematics, literature without requiring an API key.
+    """
+    def stream_generate(self, messages: List[Dict[str, str]], system_prompt: str = "", model: str = None, **kwargs) -> Generator[str, None, None]:
+        payload_messages = []
+        if system_prompt:
+            payload_messages.append({"role": "system", "content": system_prompt})
+        for msg in messages:
+            payload_messages.append({
+                "role": "user" if msg["role"] in ("user", "human") else "assistant",
+                "content": msg["content"]
+            })
+
+        url = "https://text.pollinations.ai/openai"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "messages": payload_messages,
+            "model": "openai",
+            "stream": True,
+            "temperature": kwargs.get("temperature", 0.7)
+        }
+        try:
+            res = requests.post(url, headers=headers, json=payload, stream=True, timeout=60)
+            if res.status_code == 200:
+                for line in res.iter_lines(decode_unicode=True):
+                    if line and line.startswith("data: "):
+                        data_str = line[6:].strip()
+                        if data_str == "[DONE]":
+                            break
+                        try:
+                            data_json = json.loads(data_str)
+                            delta = data_json.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if delta:
+                                yield delta
+                        except Exception:
+                            continue
+            else:
+                yield f"AI Server phản hồi trạng thái: {res.status_code}"
+        except Exception as e:
+            yield f"Lỗi kết nối AI: {str(e)}"
+
+    def generate(self, prompt: str, system_prompt: str = "", model: str = None, **kwargs) -> Dict[str, Any]:
+        url = "https://text.pollinations.ai/openai"
+        msgs = []
+        if system_prompt:
+            msgs.append({"role": "system", "content": system_prompt})
+        msgs.append({"role": "user", "content": prompt})
+        try:
+            res = requests.post(url, json={"messages": msgs, "model": "openai"}, timeout=60)
+            if res.status_code == 200:
+                data = res.json()
+                text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                return {"text": text, "tokens": len(text) // 4, "model": "universal-openai"}
+        except Exception as e:
+            pass
+        return {"text": "Không thể xử lý yêu cầu", "tokens": 0, "model": "universal-openai"}
+
 def get_ai_provider(provider_name: str = None, user_api_key: str = None) -> BaseAIProvider:
     """Factory to retrieve appropriate AI Provider based on settings and user override."""
-    # Check system settings first if not explicitly provided
     if not provider_name:
         conn = get_db()
         setting = conn.execute("SELECT value FROM system_settings WHERE key = 'default_provider'").fetchone()
@@ -278,20 +335,28 @@ def get_ai_provider(provider_name: str = None, user_api_key: str = None) -> Base
 
     provider_name = (provider_name or "gemini").lower()
     
+    # If user provided a specific API key or env var is set, use the official provider
     if "gemini" in provider_name:
-        return GeminiProvider(api_key=user_api_key)
+        if user_api_key or (Config.GEMINI_API_KEY and Config.GEMINI_API_KEY.strip()):
+            return GeminiProvider(api_key=user_api_key)
+        return FreeUniversalAIProvider()
     elif "openai" in provider_name or "gpt" in provider_name:
-        return OpenAIProvider(api_key=user_api_key)
+        if user_api_key or (Config.OPENAI_API_KEY and Config.OPENAI_API_KEY.strip()):
+            return OpenAIProvider(api_key=user_api_key)
+        return FreeUniversalAIProvider()
     elif "claude" in provider_name or "anthropic" in provider_name:
-        return AnthropicProvider(api_key=user_api_key)
+        if user_api_key or (Config.ANTHROPIC_API_KEY and Config.ANTHROPIC_API_KEY.strip()):
+            return AnthropicProvider(api_key=user_api_key)
+        return FreeUniversalAIProvider()
     else:
-        return GeminiProvider(api_key=user_api_key)
+        return FreeUniversalAIProvider()
 
 def check_available_keys() -> Dict[str, bool]:
     """Check which API keys are currently configured in environment or settings."""
     return {
-        "gemini": bool(Config.GEMINI_API_KEY.strip()),
-        "openai": bool(Config.OPENAI_API_KEY.strip()),
-        "anthropic": bool(Config.ANTHROPIC_API_KEY.strip())
+        "gemini": bool(Config.GEMINI_API_KEY and Config.GEMINI_API_KEY.strip()),
+        "openai": bool(Config.OPENAI_API_KEY and Config.OPENAI_API_KEY.strip()),
+        "anthropic": bool(Config.ANTHROPIC_API_KEY and Config.ANTHROPIC_API_KEY.strip()),
+        "universal": True
     }
 

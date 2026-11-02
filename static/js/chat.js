@@ -477,7 +477,67 @@ const Chat = {
       }
     }
 
-    // 2. High-speed intelligent local reasoning engine
+    // 2. High-Intelligence Universal Generative AI Stream (OpenAI-compatible, no key required)
+    try {
+      const messages = [];
+      if (this.currentAgent?.system_instructions) {
+        messages.push({ role: "system", content: this.currentAgent.system_instructions });
+      }
+      messages.push({ role: "user", content: prompt });
+
+      const res = await fetch("https://text.pollinations.ai/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: messages,
+          model: "openai",
+          stream: true
+        })
+      });
+
+      if (res.ok) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let accText = "";
+        let buf = "";
+
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+
+          buf += decoder.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith("data: ")) {
+              const dataStr = trimmed.slice(6).trim();
+              if (dataStr === "[DONE]") break;
+              try {
+                const parsed = JSON.parse(dataStr);
+                const delta = parsed.choices?.[0]?.delta?.content || "";
+                if (delta) {
+                  accText += delta;
+                  if (liveBubble) {
+                    liveBubble.innerHTML = this.parseMarkdown(accText);
+                    this.scrollToBottom();
+                  }
+                }
+              } catch (e) {}
+            }
+          }
+        }
+
+        if (accText.trim()) {
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Universal AI stream failed, falling back to instant engine:", e);
+    }
+
+    // 3. Fallback High-speed intelligent local reasoning engine
     const fullText = this.generateSmartResponse(prompt);
     const words = fullText.split(/(\s+)/);
     let currentText = "";
