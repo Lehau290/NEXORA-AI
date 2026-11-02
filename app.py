@@ -1,4 +1,11 @@
 import os
+import sys
+
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except Exception:
+        pass
 from flask import Flask, render_template, send_from_directory, jsonify, request
 from flask_cors import CORS
 from config import Config
