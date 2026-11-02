@@ -1,0 +1,270 @@
+/* ============================================================
+   NEXORA AI - Design System & Custom Styles
+   Colors:
+   Background: #0B0D12
+   Card:       #151923
+   Primary:    #7C5CFC
+   Secondary:  #22D3EE
+   Text:       #F8FAFC
+   ============================================================ */
+
+:root {
+  --bg-main: #0B0D12;
+  --bg-card: #151923;
+  --bg-card-hover: #1c2230;
+  --bg-input: #11151f;
+  --primary: #7C5CFC;
+  --primary-hover: #6845f5;
+  --secondary: #22D3EE;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(124, 92, 252, 0.35);
+  --glass-bg: rgba(21, 25, 35, 0.75);
+}
+
+/* Light Mode Overrides */
+html.light {
+  --bg-main: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #F1F5F9;
+  --bg-input: #F8FAFC;
+  --primary: #6D4AE8;
+  --primary-hover: #5B35E0;
+  --secondary: #0891B2;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --border-color: rgba(0, 0, 0, 0.08);
+  --border-glow: rgba(109, 74, 232, 0.25);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+.glass-dropdown {
+  background: rgba(21, 25, 35, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border-color);
+}
+html.light .glass-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* Neon Glows */
+.glow-primary {
+  box-shadow: 0 0 25px rgba(124, 92, 252, 0.25);
+}
+.glow-cyan {
+  box-shadow: 0 0 25px rgba(34, 211, 238, 0.25);
+}
+.glow-text {
+  text-shadow: 0 0 20px rgba(124, 92, 252, 0.5);
+}
+
+/* Gradient Texts & Borders */
+.gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #7C5CFC 50%, #22D3EE 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+html.light .gradient-text {
+  background: linear-gradient(135deg, #0F172A 0%, #6D4AE8 60%, #0891B2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-border {
+  position: relative;
+}
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(124, 92, 252, 0.5), rgba(34, 211, 238, 0.3), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 92, 252, 0.5);
+}
+
+/* Typing Streaming Cursor */
+.streaming-cursor::after {
+  content: "▋";
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--secondary);
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Thinking Indicator Animation */
+.thinking-pulse {
+  animation: pulse-aura 2s infinite ease-in-out;
+}
+@keyframes pulse-aura {
+  0% { transform: scale(0.98); opacity: 0.7; }
+  50% { transform: scale(1.02); opacity: 1; filter: drop-shadow(0 0 10px rgba(124, 92, 252, 0.4)); }
+  100% { transform: scale(0.98); opacity: 0.7; }
+}
+
+/* Markdown Rendering in Chat */
+.markdown-body {
+  color: inherit;
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+.markdown-body h1 { font-size: 1.35rem; }
+.markdown-body h2 { font-size: 1.2rem; }
+.markdown-body h3 { font-size: 1.05rem; }
+.markdown-body p { margin-bottom: 0.75rem; }
+.markdown-body p:last-child { margin-bottom: 0; }
+.markdown-body ul, .markdown-body ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+.markdown-body ul { list-style-type: disc; }
+.markdown-body ol { list-style-type: decimal; }
+.markdown-body li { margin-bottom: 0.25rem; }
+.markdown-body blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 0.85rem;
+  margin: 0.75rem 0;
+  color: var(--text-muted);
+  font-style: italic;
+  background: rgba(124, 92, 252, 0.05);
+  border-radius: 0 6px 6px 0;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+.markdown-body code:not(pre code) {
+  background: rgba(124, 92, 252, 0.15);
+  color: #c4b5fd;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.88em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+html.light .markdown-body code:not(pre code) {
+  background: rgba(109, 74, 232, 0.1);
+  color: #5B35E0;
+}
+
+/* Code Block Wrapper */
+.code-block-wrapper {
+  margin: 0.85rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: #0d1117;
+}
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: #161b22;
+  font-size: 0.75rem;
+  color: #8b949e;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+.code-header button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #8b949e;
+  transition: color 0.2s ease;
+}
+.code-header button:hover {
+  color: #58a6ff;
+}
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  background: #0d1117 !important;
+}
+
+/* Tables */
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+.markdown-body th {
+  background: rgba(124, 92, 252, 0.12);
+  font-weight: 600;
+}
+.markdown-body tr:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Multi-Agent Workflow Step Line */
+.step-connecting-line {
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  bottom: -15px;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--primary), rgba(124, 92, 252, 0.2));
+}
+
+/* Transitions */
+.view-transition {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+

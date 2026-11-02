@@ -1,0 +1,1 @@
+NEXORA AI là nền tảng Multi-Agent thế hệ mới. Hệ thống tích hợp 8 chuyên gia AI và hỗ trợ điều phối đa tác nhân xử lý các bài toán phức tạp từ nghiên cứu, số liệu, tiếp thị tới viết báo cáo.
