@@ -6,6 +6,12 @@ const Chat = {
   currentConversationId: null,
   currentAgent: null,
   isStreaming: false,
+  shouldAbort: false,
+  lastUserPrompt: "",
+  attachedImage: null,
+  speechRecognition: null,
+  isListening: false,
+  currentUtterance: null,
 
   async init(convId = null, agentId = null) {
     if (convId) {
@@ -48,6 +54,12 @@ const Chat = {
       attachBtn.dataset.bound = "true";
       attachBtn.addEventListener("click", () => fileInput.click());
       fileInput.addEventListener("change", (e) => this.handleFileAttachment(e));
+    }
+
+    const imageInput = document.getElementById("chat-image-upload");
+    if (imageInput && !imageInput.dataset.bound) {
+      imageInput.dataset.bound = "true";
+      imageInput.addEventListener("change", (e) => this.handleImageAttachment(e));
     }
   },
 
@@ -191,32 +203,51 @@ const Chat = {
     this.scrollToBottom();
   },
 
-  appendUserMessage(text, time = null, msgId = null) {
+  appendUserMessage(text, time = null, msgId = null, attachedImage = null) {
     const container = document.getElementById("chat-messages-container");
     if (!container) return;
 
+    this.lastUserPrompt = text;
+
     const user = API.getUser() || { full_name: "Lê Trung Hậu", avatar: "👨‍💻" };
     const div = document.createElement("div");
-    div.className = "flex gap-4 max-w-3xl mx-auto w-full group mb-6 px-4";
+    div.className = "flex gap-4 max-w-3xl mx-auto w-full group mb-6 px-4 user-message-row";
     const avatarHtml = (user.avatar && (user.avatar.startsWith("data:image/") || user.avatar.startsWith("http") || user.avatar.startsWith("/uploads/")))
       ? `<img src="${user.avatar}" alt="Avatar" class="w-full h-full object-cover rounded-xl">`
       : (user.avatar || "👤");
+
+    let imgHtml = "";
+    if (attachedImage) {
+      imgHtml = `<div class="mb-2"><img src="${attachedImage}" class="max-w-xs max-h-56 rounded-xl border border-white/10 object-cover shadow-lg"></div>`;
+    }
 
     div.innerHTML = `
       <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center text-sm font-semibold flex-shrink-0 shadow-md overflow-hidden">
         ${avatarHtml}
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="text-xs font-semibold text-slate-200">${escapeHtml(user.full_name)}</span>
-          <span class="text-[11px] text-slate-500">${time || "Vừa xong"}</span>
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-slate-200">${escapeHtml(user.full_name)}</span>
+            <span class="text-[11px] text-slate-500">${time || "Vừa xong"}</span>
+          </div>
+          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onclick="Chat.editUserMessage(this)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-white" title="Chỉnh sửa câu hỏi (Edit Prompt)">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="Chat.copyMessageText(this)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200" title="Sao chép câu hỏi">
+              <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
         </div>
-        <div class="p-4 rounded-2xl rounded-tl-sm bg-[#1A202E] border border-white/5 text-slate-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+        ${imgHtml}
+        <div class="user-message-content p-4 rounded-2xl rounded-tl-sm bg-[#1A202E] border border-white/5 text-slate-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
           ${escapeHtml(text)}
         </div>
       </div>
     `;
     container.appendChild(div);
+    lucide.createIcons();
     this.scrollToBottom();
   },
 
@@ -242,6 +273,12 @@ const Chat = {
             <span class="text-[11px] text-slate-500">${time || "Vừa xong"}</span>
           </div>
           <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button onclick="Chat.readAloud(this)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-emerald-400" title="Đọc to bằng giọng nói (Read Aloud)">
+              <i data-lucide="volume-2" class="w-3.5 h-3.5"></i>
+            </button>
+            <button onclick="Chat.regenerateResponse()" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-[#22D3EE]" title="Tạo lại câu trả lời (Regenerate)">
+              <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            </button>
             <button onclick="Chat.copyMessageText(this)" class="p-1 rounded hover:bg-slate-800 text-slate-400 hover:text-slate-200" title="Sao chép nội dung">
               <i data-lucide="copy" class="w-3.5 h-3.5"></i>
             </button>
@@ -294,8 +331,14 @@ const Chat = {
     const welcome = document.querySelector("#chat-messages-container .text-center");
     if (welcome) welcome.remove();
 
-    // 1. Append User Message
-    this.appendUserMessage(prompt);
+    // Show Stop Generating button, hide Send button
+    this.toggleStopButton(true);
+    this.shouldAbort = false;
+
+    // 1. Append User Message with optional image attachment
+    const attachedImg = this.attachedImage;
+    this.appendUserMessage(prompt, null, null, attachedImg);
+    this.clearAttachment();
 
     // 2. Append AI Thinking Aura Placeholder
     const container = document.getElementById("chat-messages-container");
@@ -422,6 +465,7 @@ const Chat = {
 
   finishStreaming(liveBubble) {
     this.isStreaming = false;
+    this.toggleStopButton(false);
     this.clearThinking(liveBubble);
     if (liveBubble) {
       liveBubble.classList.remove("streaming-cursor");
@@ -761,10 +805,17 @@ print("Kết quả:", solve_problem(numbers))  # [2, 4, 6, 8, 10]
   },
 
   copyMessageText(btn) {
-    const text = btn.closest(".group")?.querySelector(".markdown-body")?.innerText;
+    const row = btn.closest(".group") || btn.closest(".user-message-row");
+    const text = row?.querySelector(".markdown-body")?.innerText || row?.querySelector(".user-message-content")?.innerText;
     if (text) {
       navigator.clipboard.writeText(text).then(() => {
-        showToast("Đã sao chép nội dung!", "success");
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>`;
+        lucide.createIcons();
+        showToast("Đã sao chép vào bộ nhớ tạm!", "success");
+        setTimeout(() => {
+          btn.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i>`;
+          lucide.createIcons();
+        }, 2000);
       });
     }
   },
@@ -828,5 +879,205 @@ print("Kết quả:", solve_problem(numbers))  # [2, 4, 6, 8, 10]
     if (container) {
       container.scrollTop = container.scrollHeight;
     }
+  },
+
+  // -------------------------------------------------------------
+  // CHATGPT FEATURES: STOP, REGENERATE, VOICE, EDIT, ATTACHMENTS
+  // -------------------------------------------------------------
+  toggleStopButton(isStreaming) {
+    const sendBtn = document.getElementById("btn-send-message");
+    const stopBtn = document.getElementById("btn-stop-generating");
+    if (sendBtn) sendBtn.classList.toggle("hidden", isStreaming);
+    if (stopBtn) stopBtn.classList.toggle("hidden", !isStreaming);
+  },
+
+  stopGenerating() {
+    if (!this.isStreaming) return;
+    this.shouldAbort = true;
+    this.isStreaming = false;
+    this.toggleStopButton(false);
+    const liveBubble = document.getElementById("ai-live-bubble");
+    this.clearThinking(liveBubble);
+    if (liveBubble) {
+      liveBubble.classList.remove("streaming-cursor");
+    }
+    showToast("Đã dừng tạo phản hồi.", "info");
+  },
+
+  regenerateResponse() {
+    if (this.isStreaming) return;
+    if (!this.lastUserPrompt) {
+      showToast("Chưa có câu hỏi trước đó để tạo lại.", "warning");
+      return;
+    }
+    const input = document.getElementById("chat-input");
+    if (input) {
+      input.value = this.lastUserPrompt;
+      this.sendMessage();
+      showToast("Đang tạo lại câu trả lời mới...", "info");
+    }
+  },
+
+  editUserMessage(btn) {
+    const row = btn.closest(".user-message-row");
+    const contentEl = row?.querySelector(".user-message-content");
+    const text = contentEl ? contentEl.innerText.trim() : "";
+    if (!text) return;
+
+    const input = document.getElementById("chat-input");
+    if (input) {
+      input.value = text;
+      input.focus();
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 180) + "px";
+      this.scrollToBottom();
+      showToast("Đã đưa câu hỏi vào ô nhập để bạn chỉnh sửa!", "info");
+    }
+  },
+
+  readAloud(btn) {
+    if (!("speechSynthesis" in window)) {
+      showToast("Trình duyệt của bạn không hỗ trợ Text-to-Speech.", "warning");
+      return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5"></i>`;
+      btn.classList.remove("text-emerald-400");
+      lucide.createIcons();
+      showToast("Đã dừng đọc.", "info");
+      return;
+    }
+
+    const row = btn.closest(".group");
+    const text = row?.querySelector(".markdown-body")?.innerText || "";
+    if (!text) return;
+
+    const cleanText = text.replace(/```[\s\S]*?```/g, " [Đoạn mã lập trình] ").trim();
+    const utter = new SpeechSynthesisUtterance(cleanText);
+    utter.lang = "vi-VN";
+    utter.rate = 1.0;
+
+    btn.innerHTML = `<i data-lucide="volume-x" class="w-3.5 h-3.5 text-emerald-400"></i>`;
+    btn.classList.add("text-emerald-400");
+    lucide.createIcons();
+
+    utter.onend = () => {
+      btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5"></i>`;
+      btn.classList.remove("text-emerald-400");
+      lucide.createIcons();
+    };
+
+    utter.onerror = () => {
+      btn.innerHTML = `<i data-lucide="volume-2" class="w-3.5 h-3.5"></i>`;
+      btn.classList.remove("text-emerald-400");
+      lucide.createIcons();
+    };
+
+    window.speechSynthesis.speak(utter);
+    showToast("Đang đọc to câu trả lời...", "info");
+  },
+
+  toggleVoiceInput() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      showToast("Trình duyệt không hỗ trợ nhận diện giọng nói (Web Speech API). Hãy dùng Google Chrome hoặc Edge.", "warning");
+      return;
+    }
+
+    const micBtn = document.getElementById("btn-voice-input");
+
+    if (this.isListening && this.speechRecognition) {
+      this.speechRecognition.stop();
+      this.isListening = false;
+      if (micBtn) {
+        micBtn.classList.remove("bg-rose-500/20", "text-rose-400", "animate-pulse");
+      }
+      showToast("Đã dừng ghi âm giọng nói.", "info");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRec();
+      recognition.lang = "vi-VN";
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        this.isListening = true;
+        if (micBtn) {
+          micBtn.classList.add("bg-rose-500/20", "text-rose-400", "animate-pulse");
+        }
+        showToast("Đang lắng nghe... Bạn hãy nói câu hỏi bằng tiếng Việt.", "info");
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const input = document.getElementById("chat-input");
+        if (input) {
+          input.value = (input.value ? input.value + " " : "") + transcript;
+          input.style.height = "auto";
+          input.style.height = Math.min(input.scrollHeight, 180) + "px";
+          input.focus();
+        }
+        showToast(`Đã nhận diện: "${transcript}"`, "success");
+      };
+
+      recognition.onerror = (e) => {
+        this.isListening = false;
+        if (micBtn) {
+          micBtn.classList.remove("bg-rose-500/20", "text-rose-400", "animate-pulse");
+        }
+        showToast("Không nghe rõ hoặc chưa cấp quyền Micro: " + (e.error || ""), "warning");
+      };
+
+      recognition.onend = () => {
+        this.isListening = false;
+        if (micBtn) {
+          micBtn.classList.remove("bg-rose-500/20", "text-rose-400", "animate-pulse");
+        }
+      };
+
+      this.speechRecognition = recognition;
+      recognition.start();
+    } catch (e) {
+      showToast("Lỗi khởi tạo giọng nói: " + e.message, "error");
+    }
+  },
+
+  handleImageAttachment(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      showToast("Vui lòng chọn file hình ảnh hợp lệ (PNG, JPG, WebP...).", "warning");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      this.attachedImage = event.target.result;
+      const previewBar = document.getElementById("chat-attachment-preview-bar");
+      const thumb = document.getElementById("chat-attachment-thumb");
+      const name = document.getElementById("chat-attachment-name");
+
+      if (thumb) thumb.innerHTML = `<img src="${this.attachedImage}" class="w-full h-full object-cover">`;
+      if (name) name.textContent = file.name;
+      if (previewBar) previewBar.classList.remove("hidden");
+
+      showToast(`Đã đính kèm ảnh: ${file.name}`, "success");
+      lucide.createIcons();
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  },
+
+  clearAttachment() {
+    this.attachedImage = null;
+    const previewBar = document.getElementById("chat-attachment-preview-bar");
+    if (previewBar) previewBar.classList.add("hidden");
+    const thumb = document.getElementById("chat-attachment-thumb");
+    if (thumb) thumb.innerHTML = "📎";
   }
 };

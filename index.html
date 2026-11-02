@@ -599,16 +599,40 @@
         <div class="p-4 glass-panel border-t border-white/5 flex-shrink-0">
           <div class="max-w-3xl mx-auto">
             <div class="relative rounded-2xl bg-[#151923] border border-white/10 focus-within:border-[#7C5CFC] transition-colors p-2 shadow-xl">
+              <!-- Attachment Preview Bar -->
+              <div id="chat-attachment-preview-bar" class="hidden flex items-center justify-between p-2 mb-2 rounded-xl bg-slate-900 border border-white/10">
+                <div class="flex items-center gap-2 overflow-hidden">
+                  <div id="chat-attachment-thumb" class="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center flex-shrink-0 text-xs overflow-hidden">
+                    📎
+                  </div>
+                  <span id="chat-attachment-name" class="text-xs text-slate-200 truncate font-medium">file.png</span>
+                </div>
+                <button type="button" onclick="Chat.clearAttachment()" class="p-1 rounded-md hover:bg-slate-800 text-slate-400 hover:text-rose-400">
+                  <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+
               <!-- Textarea -->
               <textarea id="chat-input" rows="1" placeholder="Hỏi AI bất kỳ điều gì (Enter để gửi, Shift + Enter để xuống dòng)..." class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-2 max-h-44"></textarea>
 
               <!-- Controls bar -->
               <div class="flex items-center justify-between pt-2 px-2 border-t border-white/5">
                 <div class="flex items-center gap-1.5">
-                  <!-- File Attachment -->
+                  <!-- File Attachment (Knowledge Base) -->
                   <input type="file" id="chat-file-upload" class="hidden" accept=".pdf,.docx,.txt,.csv,.xlsx,.md">
-                  <button id="btn-attach-file" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-[#22D3EE] transition-colors" title="Đính kèm tài liệu vào Knowledge Base">
+                  <button id="btn-attach-file" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-[#22D3EE] transition-colors" title="Đính kèm tài liệu vào Knowledge Base (RAG)">
                     <i data-lucide="paperclip" class="w-4 h-4"></i>
+                  </button>
+
+                  <!-- Image Attachment -->
+                  <input type="file" id="chat-image-upload" class="hidden" accept="image/*">
+                  <button type="button" id="btn-attach-image" onclick="document.getElementById('chat-image-upload').click()" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-[#7C5CFC] transition-colors" title="Đính kèm ảnh vào câu hỏi">
+                    <i data-lucide="image" class="w-4 h-4"></i>
+                  </button>
+
+                  <!-- Voice Input (Speech-to-text) -->
+                  <button type="button" id="btn-voice-input" onclick="Chat.toggleVoiceInput()" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-emerald-400 transition-colors" title="Nhập liệu bằng giọng nói (Voice to Text)">
+                    <i data-lucide="mic" class="w-4 h-4"></i>
                   </button>
 
                   <!-- Agent Switcher Shortcut -->
@@ -618,10 +642,18 @@
                   </button>
                 </div>
 
-                <!-- Send Button -->
-                <button id="btn-send-message" class="p-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white hover:opacity-90 shadow-md transition-all flex items-center justify-center">
-                  <i data-lucide="send" class="w-4 h-4"></i>
-                </button>
+                <div class="flex items-center gap-2">
+                  <!-- Stop Generating Button (active during streaming) -->
+                  <button type="button" id="btn-stop-generating" onclick="Chat.stopGenerating()" class="hidden px-3 py-2 rounded-xl bg-rose-600/90 hover:bg-rose-600 text-white shadow-md transition-all flex items-center gap-1.5 text-xs font-bold animate-pulse" title="Dừng sinh câu trả lời">
+                    <i data-lucide="square" class="w-3.5 h-3.5 fill-white"></i>
+                    <span>Dừng</span>
+                  </button>
+
+                  <!-- Send Button -->
+                  <button id="btn-send-message" class="p-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white hover:opacity-90 shadow-md transition-all flex items-center justify-center">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="text-[10px] text-center text-slate-500 mt-2">
