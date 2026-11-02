@@ -353,8 +353,8 @@ const Chat = {
           <span class="text-xs font-bold text-[#7C5CFC]">${this.currentAgent?.name || "NEXORA AI"}</span>
           <span class="text-[11px] text-slate-500 ai-status-text">Đang suy nghĩ...</span>
         </div>
-        <div id="ai-live-bubble" class="markdown-body p-4 rounded-2xl rounded-tl-sm bg-[#151923] border border-white/5 text-slate-200 text-[15px] leading-relaxed break-words streaming-cursor">
-          <div id="ai-thinking-box" class="flex items-center gap-2 text-xs text-slate-400 thinking-pulse">
+        <div class="ai-live-bubble markdown-body p-4 rounded-2xl rounded-tl-sm bg-[#151923] border border-white/5 text-slate-200 text-[15px] leading-relaxed break-words streaming-cursor">
+          <div class="ai-thinking-box flex items-center gap-2 text-xs text-slate-400 thinking-pulse">
             <span class="w-2 h-2 rounded-full bg-[#7C5CFC] animate-ping"></span>
             <span>AI đang phân tích yêu cầu và tổng hợp dữ liệu...</span>
           </div>
@@ -364,7 +364,7 @@ const Chat = {
     container.appendChild(aiBubbleWrapper);
     this.scrollToBottom();
 
-    const liveBubble = document.getElementById("ai-live-bubble");
+    const liveBubble = aiBubbleWrapper.querySelector(".ai-live-bubble");
     this.isStreaming = true;
 
     // Check if we are running in Static / GitHub Pages mode
@@ -454,7 +454,7 @@ const Chat = {
 
   clearThinking(liveBubble) {
     if (!liveBubble) return;
-    const thinking = liveBubble.querySelector("#ai-thinking-box") || document.getElementById("ai-thinking-box");
+    const thinking = liveBubble.querySelector(".ai-thinking-box") || liveBubble.querySelector("#ai-thinking-box") || document.querySelector(".ai-thinking-box");
     if (thinking) thinking.remove();
     const parent = liveBubble.closest(".flex-1");
     if (parent) {
@@ -659,6 +659,80 @@ const Chat = {
       return `**Chào bạn! Tôi hoàn toàn có thể trả lời câu hỏi và hỗ trợ bạn.** 🚀\n\nTôi là **${agent.name}** – trợ lý trí tuệ nhân tạo chuyên trách thuộc nền tảng **NEXORA AI** (*${agent.role_desc}*).\n\n### Những lĩnh vực tôi có thể hỗ trợ bạn ngay bây giờ:\n1. 💻 **Lập trình & Kỹ thuật**: Viết code, debug, giải thích thuật toán (Python, JS, Go, Rust, C++).\n2. 🔬 **Nghiên cứu & Học tập**: Giải thích kiến thức từ cơ bản tới nâng cao (phương pháp Feynman).\n3. ✍️ **Soạn thảo & Biên tập**: Viết email doanh nghiệp, báo cáo, bài viết truyền thông.\n4. 📊 **Phân tích dữ liệu**: Đọc số liệu bảng, tính toán ROI, điểm hòa vốn.\n5. 🚀 **Multi-Agent Workflow**: Phối hợp cùng lúc 5 AI Agents để hoàn thành một dự án lớn.\n\nBạn hãy gửi câu hỏi hoặc nhiệm vụ cụ thể của bạn, tôi sẽ phân tích và phản hồi ngay lập tức!`;
     }
 
+    // Specific C++ code sample requests (e.g. "code mẫu c++", "code c++", "ví dụ c++")
+    if ((p.includes("code") || p.includes("mẫu") || p.includes("ví dụ") || p.includes("chương trình")) && (p.includes("c++") || p.includes("cpp"))) {
+      return `Dưới đây là chương trình C++ mẫu hoàn chỉnh và chuẩn hiện đại (C++17/20), minh họa từ cú pháp cơ bản đến Lập trình hướng đối tượng (OOP) và Thư viện chuẩn STL:\n\n\`\`\`cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+#include <iomanip>
+
+using namespace std;
+
+// 1. Lớp đối tượng SinhVien (Minh họa OOP: Đóng gói & Kế thừa)
+class SinhVien {
+private:
+    string maSV;
+    string hoTen;
+    double diemTB;
+
+public:
+    // Constructor (Hàm khởi tạo)
+    SinhVien(string ma, string ten, double diem) 
+        : maSV(ma), hoTen(ten), diemTB(diem) {}
+
+    // Phương thức xuất thông tin
+    void hienThi() const {
+        cout << "| " << setw(8) << left << maSV 
+             << " | " << setw(20) << left << hoTen 
+             << " | " << setw(6) << fixed << setprecision(2) << diemTB 
+             << " | " << (diemTB >= 8.0 ? "Gioi" : (diemTB >= 6.5 ? "Kha" : "Trung Binh")) 
+             << " |" << endl;
+    }
+
+    double getDiem() const { return diemTB; }
+    string getTen() const { return hoTen; }
+};
+
+int main() {
+    cout << "=================================================" << endl;
+    cout << "     CHUONG TRINH QUAN LY SINH VIEN (C++ OOP)   " << endl;
+    cout << "=================================================" << endl;
+
+    // 2. Sử dụng STL Vector để lưu trữ danh sách động
+    vector<SinhVien> danhSach = {
+        SinhVien("SV01", "Le Trung Hau", 9.2),
+        SinhVien("SV02", "Nguyen Thi Bao Ngoc", 9.5),
+        SinhVien("SV03", "Tran Van An", 7.8),
+        SinhVien("SV04", "Pham Minh Duc", 6.2)
+    };
+
+    // 3. Sắp xếp danh sách giảm dần theo điểm trung bình (STL Algorithm)
+    sort(danhSach.begin(), danhSach.end(), [](const SinhVien& a, const SinhVien& b) {
+        return a.getDiem() > b.getDiem();
+    });
+
+    cout << "+----------+----------------------+--------+------------+" << endl;
+    cout << "| Ma SV    | Ho va Ten            | DiemTB | Xep Loai   |" << endl;
+    cout << "+----------+----------------------+--------+------------+" << endl;
+    for (const auto& sv : danhSach) {
+        sv.hienThi();
+    }
+    cout << "+----------+----------------------+--------+------------+" << endl;
+
+    cout << "\n✅ Tong so sinh vien da xu ly: " << danhSach.size() << endl;
+    return 0;
+}
+\`\`\`\n\n### 💡 Giải thích các điểm cốt lõi trong đoạn code C++ trên:
+1. **Lớp \`SinhVien\` (OOP)**: Thuộc tính được bảo vệ (\`private\`), sử dụng constructor dạng *member initializer list* để tối ưu hiệu năng bộ nhớ.
+2. **Thư viện \`std::vector\` (STL)**: Mảng động tự co giãn kích thước, linh hoạt và an toàn hơn mảng tĩnh truyền thống.
+3. **Thuật toán \`std::sort\` với Lambda Expression**: Sắp xếp danh sách cực nhanh chỉ với một dòng code ngắn gọn và dễ hiểu.
+4. **Thư viện \`<iomanip>\`**: Giúp căn chỉnh cột (\`setw\`) và định dạng số thập phân (\`setprecision\`) tạo bảng hiển thị chuyên nghiệp.
+
+*Bạn có muốn mở rộng thêm tính năng gì cho đoạn code này (ví dụ: nhập từ bàn phím, ghi ra file txt)?*`;
+    }
+
     // C / C++ curriculum & lesson queries
     if (p.includes("c++") || p.includes("cpp") || p.includes("c / c++") || p.includes("ngôn ngữ c")) {
       return `### 📘 Lộ Trình Học Lập Trình C++ Toàn Diện (Từ Cơ Bản Đến Nâng Cao)
@@ -748,45 +822,50 @@ print("Kết quả:", solve_problem(numbers))  # [2, 4, 6, 8, 10]
   },
 
   parseMarkdown(text) {
-    if (typeof marked !== "undefined") {
-      marked.setOptions({
-        highlight: function(code, lang) {
-          if (typeof hljs !== "undefined" && lang && hljs.getLanguage(lang)) {
-            try {
-              return hljs.highlight(code, { language: lang }).value;
-            } catch (__) {}
+    if (!text) return "";
+    try {
+      if (typeof marked !== "undefined") {
+        const renderer = new marked.Renderer();
+        renderer.code = function(arg1, arg2) {
+          let codeStr = "";
+          let langStr = "";
+          if (typeof arg1 === "object" && arg1 !== null) {
+            codeStr = arg1.text || "";
+            langStr = arg1.lang || "";
+          } else {
+            codeStr = String(arg1 || "");
+            langStr = String(arg2 || "");
           }
-          return typeof hljs !== "undefined" ? hljs.highlightAuto(code).value : escapeHtml(code);
-        },
-        breaks: true,
-        gfm: true
-      });
+          const validLang = langStr || "plaintext";
+          let highlighted = escapeHtml(codeStr);
+          try {
+            if (typeof hljs !== "undefined" && validLang && hljs.getLanguage(validLang)) {
+              highlighted = hljs.highlight(codeStr, { language: validLang }).value;
+            } else if (typeof hljs !== "undefined") {
+              highlighted = hljs.highlightAuto(codeStr).value;
+            }
+          } catch (e) {
+            highlighted = escapeHtml(codeStr);
+          }
 
-      const renderer = new marked.Renderer();
-      renderer.code = function({ text, lang }) {
-        const validLang = lang || "plaintext";
-        let highlighted = text;
-        if (typeof hljs !== "undefined" && hljs.getLanguage(validLang)) {
-          highlighted = hljs.highlight(text, { language: validLang }).value;
-        } else if (typeof hljs !== "undefined") {
-          highlighted = hljs.highlightAuto(text).value;
-        }
-
-        return `
-          <div class="code-block-wrapper my-3">
-            <div class="code-header">
-              <span>${validLang}</span>
-              <button onclick="Chat.copyCodeBlock(this)">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-                <span>Copy</span>
-              </button>
+          return `
+            <div class="code-block-wrapper my-3">
+              <div class="code-header flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-white/10 text-xs font-mono text-slate-400">
+                <span>${validLang}</span>
+                <button type="button" onclick="Chat.copyCodeBlock(this)" class="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white transition-colors">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="p-4 bg-[#0E121B] overflow-x-auto text-xs font-mono leading-relaxed"><code class="hljs language-${validLang}">${highlighted}</code></pre>
             </div>
-            <pre><code class="hljs language-${validLang}">${highlighted}</code></pre>
-          </div>
-        `;
-      };
+          `;
+        };
 
-      return marked.parse(text, { renderer });
+        return marked.parse(text, { renderer, breaks: true, gfm: true });
+      }
+    } catch (err) {
+      console.warn("Markdown parse error:", err);
     }
     return escapeHtml(text).replace(/\n/g, "<br>");
   },
