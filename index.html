@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NEXORA AI – Multi AI Agents Platform</title>
+  <meta name="description" content="Nền tảng AI Agents chuyên nghiệp - One Platform. Multiple AI Agents. Infinite Possibilities.">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              bg: '#0B0D12',
+              card: '#151923',
+              primary: '#7C5CFC',
+              secondary: '#22D3EE',
+              text: '#F8FAFC'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Marked.js (Markdown) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Highlight.js (Code Syntax Highlighting) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="static/css/style.css">
+</head>
+<body class="bg-[#0B0D12] text-[#F8FAFC] antialiased min-h-screen flex flex-col selection:bg-[#7C5CFC]/30 selection:text-[#22D3EE]">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none"></div>
+
+  <!-- Global API Key Warning Banner -->
+  <div id="global-api-key-banner" class="hidden bg-gradient-to-r from-[#7C5CFC]/20 via-[#22D3EE]/20 to-[#7C5CFC]/20 border-b border-[#7C5CFC]/30 px-4 py-2.5 text-xs text-slate-200 flex items-center justify-between z-40">
+    <div class="flex items-center gap-2 mx-auto">
+      <i data-lucide="key" class="w-4 h-4 text-[#22D3EE] animate-pulse"></i>
+      <span>Chưa cấu hình API Key cho AI Provider. Vui lòng thêm Gemini / OpenAI / Anthropic Key để trò chuyện trực tiếp với AI thật.</span>
+      <button onclick="window.location.hash='#/profile'" class="underline font-bold text-[#22D3EE] hover:text-white ml-2">Cài đặt API Key ngay</button>
+    </div>
+  </div>
+
+  <!-- LANDING NAVBAR (Shown on Landing Page) -->
+  <header id="landing-navbar" class="sticky top-0 z-40 glass-panel border-b border-white/5 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#/" class="flex items-center gap-2.5 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-white shadow-lg shadow-[#7C5CFC]/30 group-hover:scale-105 transition-transform">
+          N
+        </div>
+        <div class="flex flex-col">
+          <span class="font-bold text-lg tracking-tight gradient-text">NEXORA AI</span>
+          <span class="text-[9px] uppercase tracking-wider text-[#22D3EE] font-semibold">Multi-Agent Platform</span>
+        </div>
+      </a>
+
+      <!-- Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-300">
+        <a href="#/" class="hover:text-[#22D3EE] transition-colors">Trang Chủ</a>
+        <a href="#/agents" class="hover:text-[#22D3EE] transition-colors">AI Agents</a>
+        <a href="#landing-features" class="hover:text-[#22D3EE] transition-colors">Tính Năng</a>
+        <a href="#landing-pricing" class="hover:text-[#22D3EE] transition-colors">Bảng Giá</a>
+        <a href="#landing-about" class="hover:text-[#22D3EE] transition-colors">Giới Thiệu</a>
+      </nav>
+
+      <!-- Auth Action Buttons -->
+      <div class="flex items-center gap-3">
+        <button onclick="Profile.toggleTheme()" class="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 border border-white/5" title="Đổi giao diện Sáng/Tối">
+          <i data-lucide="sun" id="theme-toggle-icon" class="w-4 h-4"></i>
+        </button>
+
+        <div class="guest-only flex items-center gap-2">
+          <button onclick="openModal('auth-modal'); App.switchAuthTab('login')" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:bg-white/5 transition-all">
+            Đăng Nhập
+          </button>
+          <button onclick="openModal('auth-modal'); App.switchAuthTab('register')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-semibold shadow-lg shadow-[#7C5CFC]/25 hover:shadow-xl hover:shadow-[#7C5CFC]/40 transition-all">
+            Bắt Đầu Miễn Phí
+          </button>
+        </div>
+
+        <div class="user-only hidden flex items-center gap-2">
+          <a href="#/dashboard" class="px-4 py-2 rounded-xl bg-[#7C5CFC] text-white text-xs font-semibold shadow-md hover:bg-[#6845f5] transition-all flex items-center gap-1.5">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+            <span>Vào Dashboard</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN APP CONTAINER -->
+  <div class="flex-1 flex overflow-hidden">
+
+    <!-- APP SIDEBAR (Shown inside Dashboard/Chat/Workflows/etc.) -->
+    <aside id="app-sidebar" class="hidden w-64 glass-panel border-r border-white/5 flex flex-col justify-between flex-shrink-0 z-30 transition-all">
+      <div class="p-4 flex flex-col h-full overflow-hidden">
+        <!-- Logo -->
+        <div class="flex items-center justify-between mb-5 px-1">
+          <a href="#/dashboard" class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-white shadow-md shadow-[#7C5CFC]/25">
+              N
+            </div>
+            <div class="flex flex-col">
+              <span class="font-bold text-sm tracking-tight gradient-text">NEXORA AI</span>
+              <span class="text-[8px] uppercase tracking-wider text-[#22D3EE] font-semibold">Multi-Agent</span>
+            </div>
+          </a>
+          <button onclick="Profile.toggleTheme()" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800" title="Chuyển Dark/Light Mode">
+            <i data-lucide="sun" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- Primary Action: New Chat -->
+        <button id="btn-sidebar-new-chat" class="w-full py-2.5 px-3.5 mb-5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/20 hover:shadow-[#7C5CFC]/35 transition-all flex items-center justify-center gap-2">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i>
+          <span>Cuộc Trò Chuyện Mới</span>
+        </button>
+
+        <!-- Navigation Menu Links -->
+        <nav class="space-y-1 mb-4 flex-shrink-0">
+          <a href="#/dashboard" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="layout-dashboard" class="w-4 h-4 text-[#7C5CFC]"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#/chat" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="message-square" class="w-4 h-4 text-[#22D3EE]"></i>
+            <span>AI Chat Interface</span>
+          </a>
+          <a href="#/agents" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+            <span>Thư Viện AI Agents</span>
+          </a>
+          <a href="#/workflows" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="workflow" class="w-4 h-4 text-amber-400"></i>
+            <span>Multi-Agent Workflow</span>
+          </a>
+          <a href="#/studio" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
+            <span>Tự Tạo AI Agent</span>
+          </a>
+          <a href="#/knowledge" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="database" class="w-4 h-4 text-cyan-400"></i>
+            <span>Knowledge Base (RAG)</span>
+          </a>
+          <a href="#/history" class="nav-item flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors">
+            <i data-lucide="history" class="w-4 h-4 text-rose-400"></i>
+            <span>Lịch Sử Trò Chuyện</span>
+          </a>
+          <a href="#/admin" class="nav-item admin-only hidden flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 transition-colors font-semibold">
+            <i data-lucide="shield-check" class="w-4 h-4 text-amber-400"></i>
+            <span>Admin Control</span>
+          </a>
+        </nav>
+
+        <!-- Recent Chats Header -->
+        <div class="flex items-center justify-between px-3 py-1 text-[10px] uppercase font-bold tracking-wider text-slate-500">
+          <span>Hội thoại gần đây</span>
+          <i data-lucide="clock" class="w-3 h-3"></i>
+        </div>
+
+        <!-- Sidebar Recent Conversations Scrollable -->
+        <div id="sidebar-conversations-list" class="flex-1 overflow-y-auto space-y-1 my-1 pr-1"></div>
+
+        <!-- User Profile Card in Footer -->
+        <div class="pt-3 border-t border-white/5 flex items-center justify-between mt-auto">
+          <a href="#/profile" class="flex items-center gap-2.5 min-w-0 hover:opacity-80 transition-opacity">
+            <div class="current-user-avatar w-8 h-8 rounded-xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-xs text-white shadow flex-shrink-0">
+              👤
+            </div>
+            <div class="truncate">
+              <div class="current-user-name text-xs font-bold text-slate-200 truncate">Alex Rivers</div>
+              <div class="current-user-plan text-[10px] text-[#22D3EE] font-semibold uppercase">Gói Pro</div>
+            </div>
+          </a>
+          <div class="flex items-center gap-1">
+            <a href="#/profile" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800" title="Cài đặt">
+              <i data-lucide="settings" class="w-4 h-4"></i>
+            </a>
+            <button id="btn-logout" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800" title="Đăng xuất">
+              <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT VIEWS WRAPPER -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto relative">
+
+      <!-- ============================================================
+           TRANG 1: LANDING PAGE
+           ============================================================ -->
+      <section id="view-landing" class="view-panel view-transition">
+        <!-- Hero Section -->
+        <div class="relative overflow-hidden pt-20 pb-24 px-4 sm:px-6 lg:px-8 text-center max-w-5xl mx-auto">
+          <!-- Background Glow Effect -->
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[300px] bg-gradient-to-tr from-[#7C5CFC]/20 via-[#22D3EE]/15 to-transparent blur-3xl pointer-events-none rounded-full"></div>
+
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#7C5CFC]/15 text-[#22D3EE] border border-[#7C5CFC]/30 mb-8 glow-primary">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 animate-spin"></i>
+            <span>NEXORA AI 2.5 • Multi-Agent Intelligence Platform</span>
+          </div>
+
+          <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+            One Platform. <span class="gradient-text">Multiple AI Agents.</span><br>Infinite Possibilities.
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-400 max-w-3xl mx-auto mb-10 leading-relaxed">
+            Khám phá sức mạnh của trí tuệ nhân tạo với hệ thống AI Agents thông minh, giúp bạn học tập, sáng tạo, nghiên cứu và tự động hóa công việc với trải nghiệm vượt trội.
+          </p>
+
+          <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+            <a href="#/chat" class="px-7 py-3.5 rounded-2xl bg-gradient-to-r from-[#7C5CFC] to-[#6845f5] hover:from-[#6845f5] hover:to-[#5532e8] text-white text-sm font-bold shadow-xl shadow-[#7C5CFC]/30 flex items-center gap-2 hover:scale-105 transition-all">
+              <i data-lucide="message-square" class="w-4 h-4"></i>
+              <span>Start Chatting</span>
+            </a>
+            <a href="#/agents" class="px-7 py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-white/10 text-sm font-semibold flex items-center gap-2 hover:border-[#22D3EE]/40 transition-all">
+              <i data-lucide="compass" class="w-4 h-4 text-[#22D3EE]"></i>
+              <span>Explore Agents</span>
+            </a>
+            <a href="#/workflows" class="px-7 py-3.5 rounded-2xl bg-[#151923] hover:bg-slate-800 text-[#22D3EE] border border-[#22D3EE]/30 text-sm font-semibold flex items-center gap-2 hover:scale-105 transition-all">
+              <i data-lucide="workflow" class="w-4 h-4"></i>
+              <span>Multi-Agent Workflow</span>
+            </a>
+          </div>
+
+          <!-- Hero Chat Mockup Preview -->
+          <div class="max-w-4xl mx-auto rounded-3xl p-1 bg-gradient-to-b from-[#7C5CFC]/40 via-white/5 to-transparent shadow-2xl">
+            <div class="rounded-[22px] bg-[#0F131D] border border-white/10 p-6 text-left overflow-hidden">
+              <div class="flex items-center justify-between pb-4 border-b border-white/5 mb-4">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-amber-500/80"></span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500/80"></span>
+                  <span class="text-xs text-slate-400 font-mono ml-2">nexora-chat-session // multi-agent-orchestrator</span>
+                </div>
+                <span class="text-xs text-[#22D3EE] font-mono">gemini-2.0-flash • 99.9% uptime</span>
+              </div>
+
+              <div class="space-y-4 text-xs sm:text-sm">
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-xs">👤</div>
+                  <div class="p-3.5 rounded-xl bg-slate-800/80 border border-white/5 text-slate-200">
+                    Hãy nghiên cứu và xây dựng kế hoạch kinh doanh mở chuỗi cà phê công nghệ tại TP.HCM.
+                  </div>
+                </div>
+
+                <div class="flex gap-3">
+                  <div class="w-8 h-8 rounded-lg bg-slate-900 border border-[#7C5CFC]/30 flex items-center justify-center text-base">✨</div>
+                  <div class="p-4 rounded-xl bg-[#151923] border border-white/5 text-slate-300 leading-relaxed">
+                    <p class="font-bold text-[#7C5CFC] mb-1">NEXORA Multi-Agent Team đã tiếp nhận nhiệm vụ:</p>
+                    <ul class="list-disc ml-5 space-y-1 text-slate-300">
+                      <li>🔬 <strong>Research Agent</strong>: Khảo sát thị trường cà phê specialty & thói quen làm việc từ xa.</li>
+                      <li>📊 <strong>Data Analyst</strong>: Mô hình hóa dòng tiền, CAPEX 850M VNĐ và điểm hòa vốn 9 tháng.</li>
+                      <li>🚀 <strong>Marketing Agent</strong>: Chiến lược định vị "Tech Cafe - Co-working & Specialty Cold Brew".</li>
+                      <li>✍️ <strong>Writing Agent</strong>: Tổng hợp hồ sơ kêu gọi vốn đầu tư hoàn chỉnh.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured Agents Section -->
+        <div class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-white/5">
+          <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-extrabold mb-3 gradient-text">Đội Ngũ AI Agents Chuyên Trách</h2>
+            <p class="text-sm text-slate-400">Mỗi Agent sở hữu khối tri thức chuyên sâu và công cụ chuyên dụng để giải quyết chính xác bài toán của bạn.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- 8 Quick Agent Cards -->
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">✨</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI General Assistant</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Trợ lý đa năng toàn diện</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Giải đáp mọi thắc mắc, tư duy logic, tổng hợp thông tin đa lĩnh vực nhanh chóng.</p>
+              <a href="#/chat?agent_id=1" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">💻</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Coding Agent</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Kỹ sư phần mềm cao cấp</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Viết clean code, gỡ lỗi, tối ưu thuật toán đa ngôn ngữ (Python, JS, Go, Rust, SQL).</p>
+              <a href="#/chat?agent_id=2" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">🔬</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Research Agent</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Nhà nghiên cứu học thuật</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Phân tích chuyên sâu tài liệu, kiểm chứng dữ kiện và trích dẫn khoa học minh bạch.</p>
+              <a href="#/chat?agent_id=3" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">✍️</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Writing Agent</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Bậc thầy sáng tạo nội dung</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Soạn thảo email kinh doanh, bài phát biểu, báo cáo chuyên nghiệp và bài viết viral.</p>
+              <a href="#/chat?agent_id=4" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">🎓</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Study Agent</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Gia sư cá nhân thông thái</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Phương pháp Feynman giải thích bài tập dễ hiểu, tạo đề trắc nghiệm và lộ trình học tập.</p>
+              <a href="#/chat?agent_id=5" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">📊</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Data Analyst</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Chuyên gia phân tích dữ liệu</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Đọc hiểu CSV, Excel, bóc tách insight thống kê, tính toán ROI và trực quan hóa.</p>
+              <a href="#/chat?agent_id=6" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">🌐</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Translator</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Dịch thuật ngữ cảnh quốc tế</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Dịch đa ngôn ngữ mượt mà theo văn hóa bản địa, chuẩn hóa thuật ngữ chuyên ngành.</p>
+              <a href="#/chat?agent_id=7" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+
+            <div class="p-6 rounded-2xl bg-[#151923] border border-white/5 hover:border-[#7C5CFC]/40 transition-all hover:-translate-y-1">
+              <div class="text-3xl mb-3">🚀</div>
+              <h3 class="font-bold text-base text-slate-100 mb-1">AI Marketing Agent</h3>
+              <p class="text-xs text-[#22D3EE] font-medium mb-2">Chiến lược gia tăng trưởng</p>
+              <p class="text-xs text-slate-400 leading-relaxed mb-4">Lập kế hoạch Go-To-Market, định vị USP, phễu khách hàng và ý tưởng tiếp thị đột phá.</p>
+              <a href="#/chat?agent_id=8" class="text-xs font-bold text-[#7C5CFC] hover:text-[#22D3EE] flex items-center gap-1">Chat ngay &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Platform Stats -->
+        <div class="py-16 bg-[#11151F] border-y border-white/5">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div class="text-3xl sm:text-4xl font-extrabold text-[#7C5CFC] mb-1">99.9%</div>
+              <div class="text-xs text-slate-400">Độ tin cậy & Sẵn sàng</div>
+            </div>
+            <div>
+              <div class="text-3xl sm:text-4xl font-extrabold text-[#22D3EE] mb-1">8+</div>
+              <div class="text-xs text-slate-400">AI Agents Chuyên Biệt</div>
+            </div>
+            <div>
+              <div class="text-3xl sm:text-4xl font-extrabold text-purple-400 mb-1">50K+</div>
+              <div class="text-xs text-slate-400">Tác Vụ Đã Tự Động Hóa</div>
+            </div>
+            <div>
+              <div class="text-3xl sm:text-4xl font-extrabold text-emerald-400 mb-1">100%</div>
+              <div class="text-xs text-slate-400">Bảo Mật API & Dữ Liệu</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing Section -->
+        <div id="landing-pricing" class="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-2xl mx-auto mb-16">
+            <h2 class="text-3xl font-extrabold mb-3 gradient-text">Bảng Giá Dịch Vụ Linh Hoạt</h2>
+            <p class="text-sm text-slate-400">Chọn gói phù hợp cho cá nhân, nhóm làm việc hoặc doanh nghiệp tự động hóa quy trình.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Free -->
+            <div class="p-8 rounded-3xl bg-[#151923] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span class="text-xs font-bold text-[#22D3EE] uppercase tracking-wider">Cá Nhân</span>
+                <h3 class="text-2xl font-bold text-white mt-1 mb-2">Miễn Phí</h3>
+                <div class="text-3xl font-extrabold mb-6">0đ <span class="text-xs text-slate-400 font-normal">/ mãi mãi</span></div>
+                <ul class="space-y-3 text-xs text-slate-300">
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Trò chuyện với 8 AI Agents tiêu chuẩn</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> 50,000 Tokens AI mỗi tháng</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Lưu lịch sử trò chuyện cơ bản</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Tải lên 3 tài liệu Knowledge Base</li>
+                </ul>
+              </div>
+              <button onclick="openModal('auth-modal'); App.switchAuthTab('register')" class="w-full mt-8 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-all">
+                Đăng Ký Miễn Phí
+              </button>
+            </div>
+
+            <!-- Pro (Featured) -->
+            <div class="p-8 rounded-3xl bg-gradient-to-b from-[#1C2230] to-[#151923] border-2 border-[#7C5CFC] shadow-2xl shadow-[#7C5CFC]/20 flex flex-col justify-between relative">
+              <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white">
+                Được Yêu Thích Nhất
+              </div>
+              <div>
+                <span class="text-xs font-bold text-[#7C5CFC] uppercase tracking-wider">Chuyên Nghiệp</span>
+                <h3 class="text-2xl font-bold text-white mt-1 mb-2">Pro Member</h3>
+                <div class="text-3xl font-extrabold mb-6">249,000đ <span class="text-xs text-slate-400 font-normal">/ tháng</span></div>
+                <ul class="space-y-3 text-xs text-slate-300">
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Không giới hạn trò chuyện AI Agents</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> 500,000 Tokens tốc độ cao</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Multi-Agent Workflow điều phối tự động</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Tự tạo không giới hạn Custom Agents</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> RAG tìm kiếm tài liệu thông minh</li>
+                </ul>
+              </div>
+              <button onclick="openModal('auth-modal'); App.switchAuthTab('register')" class="w-full mt-8 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-xs font-bold text-white shadow-lg shadow-[#7C5CFC]/30 hover:shadow-xl transition-all">
+                Nâng Cấp Gói Pro
+              </button>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="p-8 rounded-3xl bg-[#151923] border border-white/5 flex flex-col justify-between">
+              <div>
+                <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">Doanh Nghiệp</span>
+                <h3 class="text-2xl font-bold text-white mt-1 mb-2">Enterprise</h3>
+                <div class="text-3xl font-extrabold mb-6">Liên hệ <span class="text-xs text-slate-400 font-normal">/ giải pháp riêng</span></div>
+                <ul class="space-y-3 text-xs text-slate-300">
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Toàn quyền truy cập Admin Control</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Hỗ trợ API Key tổ chức riêng</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> Kho dữ liệu RAG dung lượng lớn</li>
+                  <li class="flex items-center gap-2"><i data-lucide="check" class="w-4 h-4 text-emerald-400"></i> SLA hỗ trợ 24/7 và đào tạo chuyên sâu</li>
+                </ul>
+              </div>
+              <button onclick="openModal('auth-modal'); App.switchAuthTab('register')" class="w-full mt-8 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-all">
+                Liên Hệ Doanh Nghiệp
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="py-12 border-t border-white/5 text-center text-xs text-slate-500">
+          <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-slate-300">NEXORA AI</span>
+              <span>© 2026 NEXORA Multi AI Agents Platform. All rights reserved.</span>
+            </div>
+            <div class="flex items-center gap-4 text-slate-400">
+              <a href="#/" class="hover:text-white">Điều khoản</a>
+              <a href="#/" class="hover:text-white">Bảo mật</a>
+              <a href="#/profile" class="hover:text-white">API Keys</a>
+              <button onclick="App.quickLogin('demouser', 'demo123')" class="hover:text-[#22D3EE]">Tài khoản Demo</button>
+              <button onclick="App.quickLogin('admin', 'admin123')" class="hover:text-amber-400">Admin Portal</button>
+            </div>
+          </div>
+        </footer>
+      </section>
+
+      <!-- ============================================================
+           TRANG 3: DASHBOARD
+           ============================================================ -->
+      <section id="view-dashboard" class="view-panel hidden p-6 sm:p-8 max-w-6xl mx-auto w-full view-transition">
+        <!-- Personalized Greeting -->
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/5">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold mb-1">
+              Chào bạn, <span id="dashboard-greeting-name" class="gradient-text">Alex Rivers</span>! 👋
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-400">Bạn muốn thực hiện tác vụ trí tuệ nhân tạo nào hôm nay?</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="window.location.hash='#/workflows'" class="px-4 py-2 rounded-xl bg-[#7C5CFC]/15 hover:bg-[#7C5CFC]/25 text-[#7C5CFC] border border-[#7C5CFC]/30 text-xs font-semibold flex items-center gap-1.5 transition-all">
+              <i data-lucide="workflow" class="w-4 h-4"></i>
+              <span>Multi-Agent Workflow</span>
+            </button>
+            <button onclick="window.location.hash='#/studio'" class="px-4 py-2 rounded-xl bg-[#22D3EE]/15 hover:bg-[#22D3EE]/25 text-[#22D3EE] border border-[#22D3EE]/30 text-xs font-semibold flex items-center gap-1.5 transition-all">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+              <span>Tạo Agent Mới</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick AI Prompt Launcher Box -->
+        <div class="p-6 rounded-3xl bg-gradient-to-r from-[#1A1F2C] to-[#151923] border border-white/10 shadow-2xl mb-10">
+          <div class="flex items-center gap-2 mb-3 text-xs font-semibold text-[#22D3EE]">
+            <i data-lucide="sparkles" class="w-4 h-4"></i>
+            <span>NEXORA AI Quick Prompt Launcher</span>
+          </div>
+
+          <div class="relative mb-3">
+            <input id="dashboard-quick-input" type="text" placeholder="Nhập yêu cầu cần AI hỗ trợ ngay (ví dụ: Viết code API, phân tích dữ liệu, tóm tắt tài liệu)..." class="w-full px-5 py-3.5 pr-28 rounded-2xl bg-slate-900 border border-white/10 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC] transition-colors">
+            <button onclick="const val = document.getElementById('dashboard-quick-input').value.trim(); if(val){ window.location.hash='#/chat'; setTimeout(() => Chat.setQuickPrompt(val), 200); }" class="absolute right-2 top-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow hover:opacity-90 transition-all flex items-center gap-1.5">
+              <span>Gửi</span>
+              <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+
+          <!-- Quick Actions Pills -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="text-[11px] text-slate-500">Gợi ý nhanh:</span>
+            <button onclick="window.location.hash='#/chat?agent_id=2'; setTimeout(() => Chat.setQuickPrompt('Viết hàm Python kết nối SQLite và tạo bảng users với hashing mật khẩu'), 250)" class="px-3 py-1 rounded-full text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-white/5 transition-all">
+              💻 Viết code backend
+            </button>
+            <button onclick="window.location.hash='#/workflows'; setTimeout(() => Workflow.setQuickGoal('Nghiên cứu và lập kế hoạch kinh doanh mở chuỗi trà sữa organic'), 250)" class="px-3 py-1 rounded-full text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-white/5 transition-all">
+              🚀 Lập kế hoạch kinh doanh
+            </button>
+            <button onclick="window.location.hash='#/knowledge'" class="px-3 py-1 rounded-full text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-white/5 transition-all">
+              📚 Nạp tài liệu RAG
+            </button>
+            <button onclick="window.location.hash='#/chat?agent_id=7'; setTimeout(() => Chat.setQuickPrompt('Dịch đoạn văn bản hợp đồng này sang tiếng Anh chuẩn phong cách pháp lý quốc tế'), 250)" class="px-3 py-1 rounded-full text-[11px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-white/5 transition-all">
+              🌐 Dịch thuật hợp đồng
+            </button>
+          </div>
+        </div>
+
+        <!-- Recommended Agents -->
+        <div class="mb-10">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <i data-lucide="compass" class="w-4 h-4 text-[#7C5CFC]"></i>
+              <span>AI Agents Đề Xuất Dành Cho Bạn</span>
+            </h3>
+            <a href="#/agents" class="text-xs font-semibold text-[#22D3EE] hover:underline">Xem tất cả thư viện &rarr;</a>
+          </div>
+          <div id="dashboard-recommended-agents" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+        </div>
+
+        <!-- Recent Conversations List -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <i data-lucide="history" class="w-4 h-4 text-emerald-400"></i>
+              <span>Cuộc Hội Thoại Gần Đây</span>
+            </h3>
+            <a href="#/history" class="text-xs font-semibold text-[#7C5CFC] hover:underline">Quản lý toàn bộ lịch sử &rarr;</a>
+          </div>
+          <div id="dashboard-recent-convs" class="space-y-2.5"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 5: AI CHAT INTERFACE (Flagship Experience)
+           ============================================================ -->
+      <section id="view-chat" class="view-panel hidden flex-1 flex flex-col h-full overflow-hidden view-transition">
+        <!-- Chat Header Bar -->
+        <header class="glass-panel border-b border-white/5 px-6 py-3 flex items-center justify-between flex-shrink-0 z-10">
+          <div class="flex items-center gap-3">
+            <div id="chat-agent-avatar" class="w-10 h-10 rounded-xl bg-slate-900 border border-[#7C5CFC]/30 flex items-center justify-center text-xl shadow-md">
+              ✨
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 id="chat-agent-name" class="text-sm font-bold text-slate-100">AI General Assistant</h3>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  Online
+                </span>
+                <span id="chat-model-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400">
+                  gemini-2.0-flash
+                </span>
+              </div>
+              <div id="chat-header-title" class="text-xs text-slate-400 truncate max-w-sm sm:max-w-md">
+                Cuộc trò chuyện mới
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Header Actions -->
+          <div class="flex items-center gap-2">
+            <button id="btn-favorite-chat" onclick="if(Chat.currentConversationId) API.post(`/api/chat/conversations/${Chat.currentConversationId}/favorite`).then(r => Chat.renderHeader(null, r.is_favorite))" class="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-amber-400 transition-colors" title="Đánh dấu yêu thích">
+              <i data-lucide="star" class="w-4 h-4"></i>
+            </button>
+            <button onclick="Chat.exportChat('txt')" class="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors" title="Xuất file TXT">
+              <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+            <button onclick="Chat.exportChat('pdf')" class="p-2 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors" title="In / Xuất PDF">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+            </button>
+            <button onclick="Chat.startNewWithDefaultAgent()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition-colors flex items-center gap-1.5">
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+              <span class="hidden sm:inline">New Chat</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Message Scroll Area -->
+        <div id="chat-scroll-area" class="flex-1 overflow-y-auto py-6">
+          <div id="chat-messages-container" class="space-y-1"></div>
+        </div>
+
+        <!-- Chat Input Area -->
+        <div class="p-4 glass-panel border-t border-white/5 flex-shrink-0">
+          <div class="max-w-3xl mx-auto">
+            <div class="relative rounded-2xl bg-[#151923] border border-white/10 focus-within:border-[#7C5CFC] transition-colors p-2 shadow-xl">
+              <!-- Textarea -->
+              <textarea id="chat-input" rows="1" placeholder="Hỏi AI bất kỳ điều gì (Enter để gửi, Shift + Enter để xuống dòng)..." class="w-full bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none px-3 py-2 max-h-44"></textarea>
+
+              <!-- Controls bar -->
+              <div class="flex items-center justify-between pt-2 px-2 border-t border-white/5">
+                <div class="flex items-center gap-1.5">
+                  <!-- File Attachment -->
+                  <input type="file" id="chat-file-upload" class="hidden" accept=".pdf,.docx,.txt,.csv,.xlsx,.md">
+                  <button id="btn-attach-file" class="p-2 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-[#22D3EE] transition-colors" title="Đính kèm tài liệu vào Knowledge Base">
+                    <i data-lucide="paperclip" class="w-4 h-4"></i>
+                  </button>
+
+                  <!-- Agent Switcher Shortcut -->
+                  <button onclick="window.location.hash='#/agents'" class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+                    <i data-lucide="bot" class="w-3 h-3 text-[#7C5CFC]"></i>
+                    <span>Đổi Agent</span>
+                  </button>
+                </div>
+
+                <!-- Send Button -->
+                <button id="btn-send-message" class="p-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white hover:opacity-90 shadow-md transition-all flex items-center justify-center">
+                  <i data-lucide="send" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+            <div class="text-[10px] text-center text-slate-500 mt-2">
+              NEXORA AI có thể mắc lỗi. Hãy kiểm tra các thông tin quan trọng. Hỗ trợ đầy đủ RAG Knowledge Base & trích dẫn nguồn.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 4: AI AGENTS LIBRARY
+           ============================================================ -->
+      <section id="view-agents" class="view-panel hidden p-6 sm:p-8 max-w-7xl mx-auto w-full view-transition">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Thư Viện AI Agents</h1>
+            <p class="text-xs sm:text-sm text-slate-400">Chọn trợ lý thông minh theo chuyên môn hoặc kích hoạt Multi-Agent hợp tác.</p>
+          </div>
+          <a href="#/studio" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/25 flex items-center gap-2 self-start">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Tự Tạo Agent Của Bạn</span>
+          </a>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="mb-8 space-y-4">
+          <div class="relative max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-4 top-3.5 text-slate-500"></i>
+            <input id="agents-search-input" type="text" placeholder="Tìm kiếm Agent theo tên, chuyên môn hoặc từ khóa..." class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-[#151923] border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+          </div>
+
+          <!-- Category Tabs -->
+          <div id="agents-category-tabs" class="flex items-center gap-2 overflow-x-auto pb-2"></div>
+        </div>
+
+        <!-- Agents Grid -->
+        <div id="agents-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 6: MULTI-AGENT WORKFLOW
+           ============================================================ -->
+      <section id="view-workflows" class="view-panel hidden p-6 sm:p-8 max-w-5xl mx-auto w-full view-transition">
+        <div class="mb-8">
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#7C5CFC]/15 text-[#22D3EE] border border-[#7C5CFC]/30 mb-3">
+            <i data-lucide="workflow" class="w-3.5 h-3.5"></i>
+            <span>Backend Multi-Agent Orchestrator</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold mb-2 gradient-text">Quy Trình Phối Hợp Đa Tác Nhân (Multi-Agent)</h1>
+          <p class="text-xs sm:text-sm text-slate-400">Giao nhiệm vụ tổng quan phức tạp để hệ thống tự động phân chia cho Manager, Research, Data Analyst, Marketing và Writing Agent cùng hoàn thành!</p>
+        </div>
+
+        <!-- New Workflow Trigger Box -->
+        <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-2xl mb-10">
+          <h3 class="text-sm font-bold text-slate-200 mb-2">Giao Nhiệm Vụ Cho Đội Ngũ AI Agents:</h3>
+          <div class="relative mb-4">
+            <textarea id="workflow-goal-input" rows="3" placeholder="Nhập mục tiêu dự án (Ví dụ: Hãy nghiên cứu và xây dựng kế hoạch kinh doanh cho một cửa hàng cà phê công nghệ tại TP.HCM)..." class="w-full p-4 rounded-2xl bg-slate-900 border border-white/10 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC] resize-none"></textarea>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <!-- Fast Suggestions -->
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[11px] text-slate-500">Mẫu gợi ý:</span>
+              <button onclick="Workflow.setQuickGoal('Hãy nghiên cứu và xây dựng kế hoạch kinh doanh cho một cửa hàng cà phê công nghệ tại TP.HCM')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 border border-white/5">
+                ☕ Quán cà phê công nghệ
+              </button>
+              <button onclick="Workflow.setQuickGoal('Khảo sát thị trường và chiến lược Go-To-Market cho nền tảng phần mềm SaaS B2B')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 border border-white/5">
+                🚀 SaaS B2B Platform
+              </button>
+              <button onclick="Workflow.setQuickGoal('Phân tích thị trường xe máy điện và chiến lược giá tại Đông Nam Á')" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-300 border border-white/5">
+                ⚡ Xe máy điện Đông Nam Á
+              </button>
+            </div>
+
+            <!-- Start Button -->
+            <button id="btn-start-workflow" class="px-6 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/30 hover:shadow-xl transition-all flex items-center gap-2">
+              <i data-lucide="play" class="w-4 h-4"></i>
+              <span>Khởi Động Multi-Agent</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Workflow Execution Viewer -->
+        <div id="workflow-live-viewer" class="hidden mb-12 p-6 rounded-3xl bg-[#121620] border border-[#7C5CFC]/30 shadow-2xl">
+          <!-- Header & Progress -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-white/10 mb-6">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <h3 id="wf-view-title" class="text-base font-bold text-slate-100">Kế hoạch kinh doanh</h3>
+                <span id="wf-view-status" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold">Chờ chạy</span>
+              </div>
+              <p id="wf-view-goal" class="text-xs text-slate-400">Đang khởi tạo...</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <span class="text-xs text-slate-400">Tiến độ:</span>
+                <span id="wf-view-progress-text" class="text-sm font-bold text-[#22D3EE] ml-1">0%</span>
+                <div class="w-28 h-2 bg-slate-800 rounded-full overflow-hidden mt-1">
+                  <div id="wf-view-progress-bar" class="h-full bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+              </div>
+
+              <!-- Controls -->
+              <div class="flex items-center gap-1">
+                <button onclick="Workflow.pause()" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-amber-400" title="Tạm dừng">
+                  <i data-lucide="pause" class="w-4 h-4"></i>
+                </button>
+                <button onclick="Workflow.resume()" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-emerald-400" title="Tiếp tục">
+                  <i data-lucide="play" class="w-4 h-4"></i>
+                </button>
+                <button onclick="Workflow.stop()" class="p-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-400" title="Dừng">
+                  <i data-lucide="square" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step Timeline -->
+          <div id="wf-steps-timeline" class="space-y-4"></div>
+
+          <!-- Final Master Dossier Summary -->
+          <div id="wf-final-summary-box" class="hidden mt-8 pt-6 border-t border-white/10">
+            <div class="flex items-center justify-between mb-4">
+              <h4 class="text-sm font-bold text-[#22D3EE] flex items-center gap-2">
+                <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                <span>Báo Cáo Nghiệm Thu Tổng Hợp Cuối Cùng (Manager Dossier)</span>
+              </h4>
+              <button onclick="Workflow.copySummary()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 flex items-center gap-1.5 transition-colors">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                <span>Sao chép toàn bộ</span>
+              </button>
+            </div>
+            <div id="wf-final-summary-content" class="markdown-body p-6 rounded-2xl bg-slate-900 border border-white/10 text-xs sm:text-sm text-slate-200 leading-relaxed max-h-96 overflow-y-auto"></div>
+          </div>
+        </div>
+
+        <!-- Workflow History -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+            <i data-lucide="history" class="w-4 h-4 text-[#7C5CFC]"></i>
+            <span>Lịch Sử Các Tác Vụ Multi-Agent Đã Thực Hiện</span>
+          </h3>
+          <div id="workflow-history-list" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 7: CREATE YOUR OWN AGENT (Agent Studio)
+           ============================================================ -->
+      <section id="view-studio" class="view-panel hidden p-6 sm:p-8 max-w-6xl mx-auto w-full view-transition">
+        <div class="mb-8">
+          <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Agent Studio – Tự Tạo AI Agent</h1>
+          <p class="text-xs sm:text-sm text-slate-400">Tùy biến tính cách, chuyên môn, mô hình và công cụ để tạo nên trợ lý thông minh độc quyền cho riêng bạn.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Form -->
+          <div class="lg:col-span-2 p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+            <form id="agent-studio-form" class="space-y-4">
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Tên AI Agent *</label>
+                  <input id="agent-input-name" type="text" placeholder="Ví dụ: AI Legal Advisor" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Biểu tượng / Avatar</label>
+                  <input id="agent-input-avatar" type="text" value="🤖" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-center text-lg text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Danh Mục</label>
+                  <select id="agent-input-category" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]"></select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Vai Trò</label>
+                  <input id="agent-input-role" type="text" placeholder="Ví dụ: Cố vấn pháp lý doanh nghiệp" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Mô Tả Ngắn *</label>
+                <input id="agent-input-desc" type="text" placeholder="Mô tả khả năng và đối tượng phục vụ của Agent..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Chuyên Môn & Kỹ Năng</label>
+                <input id="agent-input-expertise" type="text" placeholder="Ví dụ: Soạn thảo hợp đồng, Luật Sở hữu trí tuệ, Tư vấn thuế" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Hướng Dẫn Hệ Thống (System Instructions) *</label>
+                <textarea id="agent-input-instructions" rows="4" placeholder="Bạn là chuyên gia cố vấn luật doanh nghiệp tại NEXORA AI. Bạn phân tích các điều khoản, chỉ ra rủi ro pháp lý và đưa ra khuyến nghị rõ ràng..." class="w-full p-4 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC] resize-none" required></textarea>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Phong Cách Phản Hồi</label>
+                  <input id="agent-input-tone" type="text" value="Chuyên nghiệp, sắc bén và chi tiết" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Mô Hình AI</label>
+                  <select id="agent-input-model" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                    <option value="gemini-2.0-flash">Google Gemini 2.0 Flash (Tốc độ cao)</option>
+                    <option value="gemini-1.5-pro">Google Gemini 1.5 Pro (Lý luận sâu)</option>
+                    <option value="gpt-4o-mini">OpenAI GPT-4o Mini</option>
+                    <option value="gpt-4o">OpenAI GPT-4o</option>
+                    <option value="claude-3-5-sonnet-20241022">Anthropic Claude 3.5 Sonnet</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Tools Permissions -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-2">Công Cụ Được Phép Sử Dụng:</label>
+                <div class="flex flex-wrap gap-4">
+                  <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" id="tool-web-search" checked class="rounded bg-slate-900 border-white/10 text-[#7C5CFC]">
+                    <span>Tìm kiếm Web (Web Search)</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" id="tool-code-interpreter" checked class="rounded bg-slate-900 border-white/10 text-[#7C5CFC]">
+                    <span>Trình chạy code (Code Interpreter)</span>
+                  </label>
+                  <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                    <input type="checkbox" id="tool-rag" checked class="rounded bg-slate-900 border-white/10 text-[#7C5CFC]">
+                    <span>Truy xuất kho tri thức (RAG)</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-white/5 flex items-center justify-between">
+                <button type="button" onclick="Studio.resetForm()" class="px-4 py-2.5 rounded-xl bg-slate-800 text-xs font-semibold text-slate-400 hover:text-white">
+                  Làm mới biểu mẫu
+                </button>
+                <button type="button" id="btn-save-custom-agent" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/25 flex items-center gap-2">
+                  <i data-lucide="plus" class="w-4 h-4"></i>
+                  <span>Lưu & Kích Hoạt Agent</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- My Custom Agents List -->
+          <div>
+            <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+              <i data-lucide="bot" class="w-4 h-4 text-[#22D3EE]"></i>
+              <span>Agent Do Bạn Tạo</span>
+            </h3>
+            <div id="my-custom-agents-list" class="space-y-4"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 8: KNOWLEDGE BASE & RAG
+           ============================================================ -->
+      <section id="view-knowledge" class="view-panel hidden p-6 sm:p-8 max-w-6xl mx-auto w-full view-transition">
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#22D3EE]/15 text-[#22D3EE] border border-[#22D3EE]/30 mb-2">
+              <i data-lucide="database" class="w-3.5 h-3.5"></i>
+              <span>RAG • Retrieval-Augmented Generation</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Kho Kiến Thức Tài Liệu (Knowledge Base)</h1>
+            <p class="text-xs sm:text-sm text-slate-400">Tải tài liệu PDF, DOCX, TXT, CSV, XLSX, MD để AI tự động chia đoạn và trích dẫn câu trả lời chính xác.</p>
+          </div>
+          <span id="kb-doc-count-badge" class="px-3.5 py-1.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-bold text-[#22D3EE]">
+            0 tài liệu
+          </span>
+        </div>
+
+        <!-- Drag & Drop Uploader -->
+        <div id="kb-drop-zone" class="p-8 rounded-3xl bg-[#151923] border-2 border-dashed border-white/10 hover:border-[#7C5CFC]/60 transition-all text-center mb-10 cursor-pointer group">
+          <input type="file" id="kb-file-input" class="hidden" accept=".pdf,.docx,.txt,.csv,.xlsx,.md">
+          <div class="w-16 h-16 rounded-2xl bg-[#7C5CFC]/10 border border-[#7C5CFC]/30 flex items-center justify-center text-[#7C5CFC] mx-auto mb-4 group-hover:scale-110 transition-transform">
+            <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+          </div>
+          <h3 class="text-base font-bold text-slate-100 mb-1">Kéo thả file tài liệu vào đây hoặc nhấn để chọn file</h3>
+          <p class="text-xs text-slate-400 mb-3">Hỗ trợ định dạng PDF, DOCX, TXT, CSV, XLSX, Markdown (Tối đa 32MB)</p>
+          <button onclick="document.getElementById('kb-file-input').click()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-[#7C5CFC] text-slate-200 hover:text-white text-xs font-semibold transition-all">
+            Chọn tệp từ máy tính
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Documents List -->
+          <div class="lg:col-span-2">
+            <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+              <i data-lucide="folder" class="w-4 h-4 text-[#7C5CFC]"></i>
+              <span>Danh Sách Tài Liệu Đã Nạp</span>
+            </h3>
+            <div id="kb-documents-list" class="space-y-3"></div>
+          </div>
+
+          <!-- RAG Search Tester Box -->
+          <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl self-start">
+            <h3 class="text-sm font-bold text-slate-200 mb-2 flex items-center gap-2">
+              <i data-lucide="search" class="w-4 h-4 text-[#22D3EE]"></i>
+              <span>Kiểm Thử Truy Vấn RAG</span>
+            </h3>
+            <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+              Nhập câu hỏi để xem trực tiếp các đoạn ngữ nghĩa (chunks) được AI trích xuất từ tài liệu.
+            </p>
+
+            <div class="relative mb-3">
+              <input id="kb-search-query-input" type="text" placeholder="Nhập từ khóa hoặc câu hỏi cần tra cứu..." class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+            </div>
+            <button id="btn-test-rag-search" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow flex items-center justify-center gap-2 mb-4">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+              <span>Quét Đoạn Trích Dẫn</span>
+            </button>
+
+            <!-- Search Results Display -->
+            <div id="kb-search-results" class="max-h-72 overflow-y-auto"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 9: CHAT HISTORY
+           ============================================================ -->
+      <section id="view-history" class="view-panel hidden p-6 sm:p-8 max-w-5xl mx-auto w-full view-transition">
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Quản Lý Lịch Sử Trò Chuyện</h1>
+            <p class="text-xs sm:text-sm text-slate-400">Tìm kiếm, lọc theo AI Agent, đổi tên hoặc tiếp tục hội thoại cũ.</p>
+          </div>
+          <button onclick="window.location.hash='#/chat'; Chat.startNewWithDefaultAgent()" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow flex items-center gap-1.5 self-start">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span>Chat Mới</span>
+          </button>
+        </div>
+
+        <div class="mb-6 max-w-md">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-4 top-3 text-slate-500"></i>
+            <input id="history-search-input" type="text" placeholder="Tìm kiếm theo tiêu đề hoặc nội dung tin nhắn..." class="w-full pl-11 pr-4 py-2.5 rounded-xl bg-[#151923] border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+          </div>
+        </div>
+
+        <div id="history-full-list" class="space-y-3"></div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 10: USER PROFILE & SETTINGS
+           ============================================================ -->
+      <section id="view-profile" class="view-panel hidden p-6 sm:p-8 max-w-5xl mx-auto w-full view-transition">
+        <div class="mb-8">
+          <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Hồ Sơ & Cài Đặt Hệ Thống</h1>
+          <p class="text-xs sm:text-sm text-slate-400">Quản lý tài khoản, thay đổi mật khẩu, cấu hình khóa API và giao diện hiển thị.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Profile Card -->
+          <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl flex flex-col justify-between">
+            <div>
+              <div class="text-center mb-6">
+                <div id="profile-avatar-display" class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-4xl text-white shadow-xl shadow-[#7C5CFC]/20 mx-auto mb-3">
+                  👤
+                </div>
+                <h3 id="profile-name-display" class="text-lg font-bold text-slate-100">Alex Rivers</h3>
+                <p id="profile-email-display" class="text-xs text-slate-400 mb-2">demo@nexora.ai</p>
+                <span id="profile-plan-badge" class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-[#7C5CFC]/20 to-[#22D3EE]/20 text-[#22D3EE] border border-[#22D3EE]/30">
+                  Gói Pro
+                </span>
+              </div>
+
+              <!-- Tokens Usage Bar -->
+              <div class="p-4 rounded-2xl bg-slate-900 border border-white/5 mb-6">
+                <div class="flex items-center justify-between text-xs mb-2">
+                  <span class="text-slate-400 font-semibold">Mức sử dụng Tokens AI</span>
+                  <span class="font-mono text-[#22D3EE]"><span id="profile-tokens-used">0</span> / <span id="profile-tokens-limit">50,000</span></span>
+                </div>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                  <div id="profile-tokens-bar" class="h-full bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] rounded-full" style="width: 20%"></div>
+                </div>
+              </div>
+
+              <!-- Stats Grid -->
+              <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-white/5">
+                  <div id="stat-user-conversations" class="font-bold text-base text-slate-100">0</div>
+                  <div class="text-[10px] text-slate-500">Hội thoại</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-white/5">
+                  <div id="stat-user-agents" class="font-bold text-base text-slate-100">0</div>
+                  <div class="text-[10px] text-slate-500">Custom Agents</div>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-white/5">
+                  <div id="stat-user-docs" class="font-bold text-base text-slate-100">0</div>
+                  <div class="text-[10px] text-slate-500">Tài liệu RAG</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-6 border-t border-white/5 flex items-center justify-between mt-6">
+              <span class="text-xs text-slate-400">Giao diện:</span>
+              <button id="btn-toggle-theme" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 flex items-center gap-2">
+                <i data-lucide="sun" class="w-3.5 h-3.5"></i>
+                <span>Chuyển Theme Sáng / Tối</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Update Settings & API Keys -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Profile Info & Password -->
+            <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+              <h3 class="text-sm font-bold text-slate-200 mb-4 flex items-center gap-2">
+                <i data-lucide="user-check" class="w-4 h-4 text-[#7C5CFC]"></i>
+                <span>Thông Tin Cá Nhân & Đổi Mật Khẩu</span>
+              </h3>
+              <form id="profile-update-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Họ và Tên</label>
+                    <input id="input-profile-fullname" type="text" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Avatar Emoji</label>
+                    <input id="input-profile-avatar" type="text" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-center text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu hiện tại</label>
+                    <input id="input-profile-old-pass" type="password" placeholder="Chỉ nhập khi muốn đổi mật khẩu" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu mới</label>
+                    <input id="input-profile-new-pass" type="password" placeholder="Tối thiểu 6 ký tự" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                  </div>
+                </div>
+
+                <div class="text-right pt-2">
+                  <button type="submit" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow hover:opacity-90">
+                    Cập Nhật Hồ Sơ
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Custom AI Provider API Keys Box -->
+            <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                  <i data-lucide="key" class="w-4 h-4 text-[#22D3EE]"></i>
+                  <span>Cấu Hình API Key Trực Tiếp (Gemini / OpenAI / Claude)</span>
+                </h3>
+              </div>
+              <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+                Nhập API Key của bạn để trò chuyện thời gian thực với các mô hình AI. Hệ thống lưu bảo mật ở phía server và không để lộ ra frontend.
+              </p>
+
+              <!-- Status List -->
+              <div class="grid grid-cols-3 gap-3 mb-4 p-3 rounded-2xl bg-slate-900 border border-white/5 text-center">
+                <div>
+                  <div class="text-xs font-bold text-slate-300">Google Gemini</div>
+                  <div id="status-key-gemini" class="text-[11px] text-amber-400">Đang kiểm tra...</div>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-300">OpenAI GPT</div>
+                  <div id="status-key-openai" class="text-[11px] text-slate-500">Chưa cấu hình</div>
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-300">Claude Anthropic</div>
+                  <div id="status-key-anthropic" class="text-[11px] text-slate-500">Chưa cấu hình</div>
+                </div>
+              </div>
+
+              <!-- Input Form -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Nhà Cung Cấp</label>
+                  <select id="input-key-provider" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                    <option value="gemini">Google Gemini (Khuyên dùng)</option>
+                    <option value="openai">OpenAI (ChatGPT)</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                  </select>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1">Mã API Key Secret</label>
+                  <input id="input-key-secret" type="password" placeholder="Dán mã API Key (ví dụ: AIzaSy... hoặc sk-...)" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+                </div>
+              </div>
+
+              <div class="text-right">
+                <button id="btn-save-custom-api-key" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow hover:opacity-90 flex items-center gap-2 ml-auto">
+                  <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                  <span>Lưu & Kích Hoạt API Key</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================
+           TRANG 11: ADMIN DASHBOARD
+           ============================================================ -->
+      <section id="view-admin" class="view-panel hidden p-6 sm:p-8 max-w-7xl mx-auto w-full view-transition">
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-400 border border-amber-500/30 mb-2">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+              <span>Admin Management Portal</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-extrabold mb-1 gradient-text">Bảng Điều Khiển Quản Trị Hệ Thống</h1>
+            <p class="text-xs sm:text-sm text-slate-400">Giám sát người dùng, lượng yêu cầu AI, phân quyền và cấu hình mô hình toàn hệ thống.</p>
+          </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+          <div class="p-5 rounded-2xl bg-[#151923] border border-white/5">
+            <div class="text-xs text-slate-400 mb-1">Người Dùng</div>
+            <div id="admin-stat-users" class="text-2xl font-extrabold text-slate-100">0</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#151923] border border-white/5">
+            <div class="text-xs text-slate-400 mb-1">Tổng AI Agents</div>
+            <div id="admin-stat-agents" class="text-2xl font-extrabold text-[#7C5CFC]">0</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#151923] border border-white/5">
+            <div class="text-xs text-slate-400 mb-1">Cuộc Hội Thoại</div>
+            <div id="admin-stat-convs" class="text-2xl font-extrabold text-[#22D3EE]">0</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#151923] border border-white/5">
+            <div class="text-xs text-slate-400 mb-1">Tokens Đã Xử Lý</div>
+            <div id="admin-stat-tokens" class="text-2xl font-extrabold text-purple-400 font-mono">0</div>
+          </div>
+          <div class="p-5 rounded-2xl bg-[#151923] border border-white/5">
+            <div class="text-xs text-slate-400 mb-1">Tác Vụ Multi-Agent</div>
+            <div id="admin-stat-wfs" class="text-2xl font-extrabold text-emerald-400">0</div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <!-- Users Table -->
+          <div class="lg:col-span-2 p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-slate-100 flex items-center gap-2">
+                <i data-lucide="users" class="w-4 h-4 text-[#7C5CFC]"></i>
+                <span>Quản Lý Danh Sách Người Dùng</span>
+              </h3>
+              <input id="admin-user-search" type="text" placeholder="Tìm kiếm người dùng..." class="px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-xs text-slate-200 focus:outline-none focus:border-[#7C5CFC]">
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-400">
+                    <th class="p-3">Người Dùng</th>
+                    <th class="p-3">Vai Trò</th>
+                    <th class="p-3">Gói</th>
+                    <th class="p-3">Tokens Dùng</th>
+                    <th class="p-3">Trạng Thái</th>
+                    <th class="p-3 text-right">Hành Động</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Model Usage Distribution Chart -->
+          <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl flex flex-col justify-between">
+            <h3 class="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
+              <i data-lucide="pie-chart" class="w-4 h-4 text-[#22D3EE]"></i>
+              <span>Phân Bổ Lượng Gọi Theo Mô Hình AI</span>
+            </h3>
+            <div class="relative h-60 w-full flex items-center justify-center">
+              <canvas id="admin-model-chart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- System Settings & Audit Logs -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- System Configuration Panel -->
+          <div class="p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+            <h3 class="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+              <span>Cấu Hình Tham Số Hệ Thống</span>
+            </h3>
+            <form id="admin-settings-form" class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Tên Nền Tảng</label>
+                <input id="setting-site_name" type="text" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Tagline Khẩu Hiệu</label>
+                <input id="setting-site_tagline" type="text" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Nhà Cung Cấp Mặc Định</label>
+                <select id="setting-default_provider" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100">
+                  <option value="gemini">Google Gemini</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic Claude</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Mô Hình AI Mặc Định</label>
+                <input id="setting-default_model" type="text" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Giới Hạn Yêu Cầu / Ngày (Free)</label>
+                <input id="setting-max_daily_requests" type="number" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100">
+              </div>
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow">
+                Lưu Cấu Hình Toàn Hệ Thống
+              </button>
+            </form>
+          </div>
+
+          <!-- Activity Audit Logs -->
+          <div class="lg:col-span-2 p-6 rounded-3xl bg-[#151923] border border-white/10 shadow-xl">
+            <h3 class="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+              <span>Nhật Ký Sử Dụng & Hoạt Động Thời Gian Thực</span>
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-400">
+                    <th class="p-3">Người Dùng</th>
+                    <th class="p-3">Hành Động</th>
+                    <th class="p-3">Mô Hình</th>
+                    <th class="p-3">Tokens</th>
+                    <th class="p-3">Thời Gian</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-logs-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================
+       MODAL: AUTHENTICATION (Login & Register)
+       ============================================================ -->
+  <div id="auth-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div class="relative w-full max-w-md p-6 sm:p-8 rounded-3xl bg-[#151923] border border-white/10 shadow-2xl view-transition">
+      <!-- Close button -->
+      <button onclick="closeModal('auth-modal')" class="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+
+      <!-- Brand Logo -->
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#7C5CFC] to-[#22D3EE] flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-[#7C5CFC]/30 mx-auto mb-3">
+          N
+        </div>
+        <h2 class="text-xl font-bold text-slate-100 gradient-text">NEXORA AI</h2>
+        <p class="text-xs text-slate-400">Nền tảng Multi AI Agents thế hệ mới</p>
+      </div>
+
+      <!-- Quick 1-Click Login Shortcuts for Evaluator -->
+      <div class="mb-6 p-3.5 rounded-2xl bg-slate-900 border border-[#7C5CFC]/30 text-center">
+        <div class="text-[11px] text-slate-400 font-semibold mb-2">Đăng nhập nhanh để trải nghiệm:</div>
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-quick-demo-login" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-[#7C5CFC]/20 text-[#22D3EE] border border-white/5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+            <span>⚡ Demo User</span>
+          </button>
+          <button id="btn-quick-admin-login" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-white/5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+            <span>👑 Admin Portal</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="flex border-b border-white/10 mb-6 text-xs font-bold">
+        <button id="tab-login-btn" onclick="App.switchAuthTab('login')" class="flex-1 py-2.5 text-center text-[#7C5CFC] border-b-2 border-[#7C5CFC] transition-colors">
+          Đăng Nhập
+        </button>
+        <button id="tab-register-btn" onclick="App.switchAuthTab('register')" class="flex-1 py-2.5 text-center text-slate-400 hover:text-slate-200 transition-colors">
+          Tạo Tài Khoản Mới
+        </button>
+      </div>
+
+      <!-- Login Box -->
+      <div id="auth-login-box">
+        <form id="form-login" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Email hoặc Username</label>
+            <input id="login-identifier" type="text" placeholder="demo@nexora.ai hoặc demouser" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu</label>
+            <input id="login-password" type="password" placeholder="••••••••" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/25 hover:shadow-xl transition-all">
+            Đăng Nhập Ngay
+          </button>
+        </form>
+      </div>
+
+      <!-- Register Box -->
+      <div id="auth-register-box" class="hidden">
+        <form id="form-register" class="space-y-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Họ và Tên</label>
+            <input id="reg-fullname" type="text" placeholder="Nguyễn Văn A" class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Email</label>
+            <input id="reg-email" type="email" placeholder="name@domain.com" class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Username</label>
+            <input id="reg-username" type="text" placeholder="username" class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]" required>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu</label>
+              <input id="reg-password" type="password" placeholder="••••••••" class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Xác nhận</label>
+              <input id="reg-confirm-password" type="password" placeholder="••••••••" class="w-full px-4 py-2 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]" required>
+            </div>
+          </div>
+          <button type="submit" class="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/25 hover:shadow-xl transition-all">
+            Đăng Ký Tài Khoản
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL: AGENT DETAILS VIEWER
+       ============================================================ -->
+  <div id="agent-details-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div class="relative w-full max-w-lg p-6 sm:p-8 rounded-3xl bg-[#151923] border border-white/10 shadow-2xl view-transition">
+      <button onclick="closeModal('agent-details-modal')" class="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <div id="agent-details-content"></div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="static/js/api.js"></script>
+  <script src="static/js/chat.js"></script>
+  <script src="static/js/agents.js"></script>
+  <script src="static/js/workflow.js"></script>
+  <script src="static/js/studio.js"></script>
+  <script src="static/js/knowledge.js"></script>
+  <script src="static/js/history.js"></script>
+  <script src="static/js/profile.js"></script>
+  <script src="static/js/admin.js"></script>
+  <script src="static/js/app.js"></script>
+</body>
+</html>
+
