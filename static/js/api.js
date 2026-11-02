@@ -364,6 +364,41 @@ const API = {
       };
     }
 
+    // 7.1 AI Adaptive Memory (Continuous Self-Learning Memory)
+    if (endpoint.includes("/api/chat/memory")) {
+      let saved = JSON.parse(localStorage.getItem("nexora_ai_memories") || "null");
+      if (!saved || !saved.length) {
+        saved = [
+          { id: 1, topic: "Sở thích & Chuyên môn", content: "Người dùng quan tâm đến Lập trình C++, Python, Trí tuệ nhân tạo (AI/ML) và Tự động hóa.", created_at: "Hôm nay" },
+          { id: 2, topic: "Phong cách phản hồi", content: "Ưu tiên giải thích chi tiết, có ví dụ code thực tế, văn phong chuyên nghiệp và rõ ràng.", created_at: "Hôm nay" },
+          { id: 3, topic: "Mục tiêu học tập", content: "Nghiên cứu sâu về Multi-Agent AI và các mô hình ngôn ngữ lớn thế hệ mới.", created_at: "Hôm nay" }
+        ];
+        localStorage.setItem("nexora_ai_memories", JSON.stringify(saved));
+      }
+
+      if (options.method === "POST") {
+        const newMem = {
+          id: Date.now(),
+          topic: body.topic || "Tự học từ hội thoại",
+          content: body.content,
+          created_at: "Vừa xong"
+        };
+        saved.unshift(newMem);
+        localStorage.setItem("nexora_ai_memories", JSON.stringify(saved));
+        return { success: true, message: "AI đã ghi nhớ kiến thức mới thành công!", memory: newMem };
+      }
+
+      if (options.method === "DELETE") {
+        const match = endpoint.match(/\/api\/chat\/memory\/(\d+)/);
+        const memId = match ? parseInt(match[1]) : 0;
+        saved = saved.filter(m => m.id !== memId);
+        localStorage.setItem("nexora_ai_memories", JSON.stringify(saved));
+        return { success: true, message: "Đã xóa ký ức khỏi bộ nhớ AI." };
+      }
+
+      return { success: true, memories: saved };
+    }
+
     // 8. Workflows
     if (endpoint.includes("/api/workflows")) {
       return {

@@ -243,6 +243,16 @@ def init_db():
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- 16. AI MEMORIES (Continuous Self-Learning Memory like ChatGPT Memory)
+    CREATE TABLE IF NOT EXISTS ai_memories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        topic TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    );
+
     -- INDEXES FOR MAXIMUM QUERY SPEED
     CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);

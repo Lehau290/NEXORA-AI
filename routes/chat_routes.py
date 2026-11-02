@@ -390,3 +390,49 @@ def delete_message(msg_id: int):
     conn.close()
     return jsonify({"success": True, "message": "Đã xóa tin nhắn."})
 
+# ============================================================
+# AI CONTINUOUS MEMORY / SELF-LEARNING (ChatGPT & Gemini Memory)
+# ============================================================
+
+@chat_bp.route("/memory", methods=["GET"])
+@token_required
+def get_user_memories():
+    conn = get_db()
+    memories = conn.execute("""
+        SELECT id, topic, content, created_at 
+        FROM ai_memories 
+        WHERE user_id = ? 
+        ORDER BY created_at DESC
+    """, (g.current_user["id"],)).fetchall()
+    conn.close()
+    return jsonify({"success": True, "memories": [dict(m) for m in memories]})
+
+@chat_bp.route("/memory", methods=["POST"])
+@token_required
+def add_user_memory():
+    data = request.get_json() or {}
+    content = data.get("content", "").strip()
+    topic = data.get("topic", "Kiến thức tự học").strip()
+    if not content:
+        return jsonify({"success": False, "error": "Nội dung ghi nhớ không được để trống."}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO ai_memories (user_id, topic, content)
+        VALUES (?, ?, ?)
+    """, (g.current_user["id"], topic, content))
+    conn.commit()
+    mem_id = cursor.lastrowid
+    conn.close()
+    return jsonify({"success": True, "message": "AI đã ghi nhớ kiến thức mới thành công!", "memory_id": mem_id})
+
+@chat_bp.route("/memory/<int:mem_id>", methods=["DELETE"])
+@token_required
+def delete_user_memory(mem_id: int):
+    conn = get_db()
+    conn.execute("DELETE FROM ai_memories WHERE id = ? AND user_id = ?", (mem_id, g.current_user["id"]))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": "Đã xóa ký ức khỏi bộ nhớ AI."})
+
