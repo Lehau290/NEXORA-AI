@@ -31,9 +31,9 @@ const HarnessOS = {
         <!-- Subtle Background Cyber Ambient Glow -->
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.08)_0%,rgba(11,13,18,0.95)_75%)] pointer-events-none"></div>
 
-        <!-- Sleek High-Tech Window Container -->
-        <div class="relative w-full max-w-5xl h-full max-h-[88vh] md:max-h-[82vh] mx-auto md:p-3 flex flex-col items-center justify-center">
-          <div class="relative w-full h-full bg-black rounded-none md:rounded-2xl border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.85)] overflow-hidden flex items-center justify-center group">
+        <!-- Sleek High-Tech Window Container (16:9 Widescreen) -->
+        <div class="relative w-full max-w-6xl aspect-video max-h-[92vh] mx-auto md:p-3 flex flex-col items-center justify-center">
+          <div class="relative w-full h-full bg-black rounded-none md:rounded-2xl border border-white/10 shadow-[0_0_70px_rgba(0,0,0,0.9)] overflow-hidden flex items-center justify-center group">
             
             <!-- Video Element (Muted / No Sound, Autoplay, PlaysInline) -->
             <video 
@@ -62,8 +62,8 @@ const HarnessOS = {
             </div>
 
             <!-- Interactive Climax Overlay: Enter Workspace Button (Reveals at end) -->
-            <div id="harness-enter-prompt" class="absolute inset-0 z-20 bg-black/50 backdrop-blur-[2px] hidden flex-col items-center justify-center text-center p-6 animate-fadeIn">
-              <div class="p-6 md:p-8 rounded-3xl bg-[#0B0D12]/90 border border-cyan-500/30 shadow-[0_0_50px_rgba(34,211,238,0.25)] flex flex-col items-center">
+            <div id="harness-enter-prompt" class="absolute inset-0 z-20 bg-black/55 backdrop-blur-[2px] hidden flex-col items-center justify-center text-center p-6 animate-fadeIn">
+              <div class="p-6 md:p-8 rounded-3xl bg-[#0B0D12]/92 border border-cyan-500/35 shadow-[0_0_50px_rgba(34,211,238,0.25)] flex flex-col items-center">
                 <span class="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 uppercase tracking-widest mb-3">
                   AUTHENTICATION COMPLETE • PRO MODE ACTIVE
                 </span>
@@ -108,8 +108,8 @@ const HarnessOS = {
         const percent = (this.videoEl.currentTime / this.videoEl.duration) * 100;
         if (progressBar) progressBar.style.width = percent + "%";
 
-        // Show Enter button when near the end (after anime cyberpunk scene reveals at 23s)
-        if (this.videoEl.currentTime >= 23.5 && enterPrompt && enterPrompt.classList.contains("hidden")) {
+        // Show Enter button when near the end (after cyberpunk scene reveals at 20s)
+        if (this.videoEl.currentTime >= 20.0 && enterPrompt && enterPrompt.classList.contains("hidden")) {
           enterPrompt.classList.remove("hidden");
         }
       }
@@ -118,10 +118,10 @@ const HarnessOS = {
     // Auto finish when video ends
     this.videoEl.addEventListener("ended", () => {
       if (enterPrompt) enterPrompt.classList.remove("hidden");
-      setTimeout(() => this.finish(), 2500);
+      setTimeout(() => this.finish(), 2000);
     });
 
-    // If video fails or can't play, auto-skip after 3s
+    // If video fails or can't play, auto-skip after 1s
     this.videoEl.addEventListener("error", () => {
       console.warn("Video playback encountered error, skipping to dashboard.");
       setTimeout(() => this.skip(), 1000);
@@ -139,11 +139,11 @@ const HarnessOS = {
     };
     window.addEventListener("keydown", this._keyHandler);
 
-    // Fallback safety timeout (32 seconds max)
+    // Fallback safety timeout (28 seconds max)
     clearTimeout(this.fallbackTimer);
     this.fallbackTimer = setTimeout(() => {
       if (this.active) this.finish();
-    }, 32000);
+    }, 28000);
   },
 
   unbindEvents() {
