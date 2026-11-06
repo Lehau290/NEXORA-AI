@@ -145,31 +145,72 @@ const Chat = {
     if (!container || !this.currentAgent) return;
 
     container.innerHTML = `
-      <div class="flex flex-col items-center justify-center min-h-[50vh] text-center px-4 py-8 max-w-xl mx-auto view-transition">
-        <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#7C5CFC]/20 to-[#22D3EE]/20 border border-[#7C5CFC]/30 flex items-center justify-center text-4xl mb-4 shadow-xl">
-          ${this.currentAgent.avatar || "✨"}
+      <div class="flex flex-col items-center justify-center min-h-[52vh] text-center px-4 py-8 max-w-2xl mx-auto view-transition">
+        <!-- DeepSeek / Nexora Whale Floating Emblem -->
+        <div class="relative mb-4 group">
+          <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-[#1E2538] to-[#111624] border border-cyan-400/30 flex items-center justify-center text-3xl shadow-[0_0_35px_rgba(34,211,238,0.2)] group-hover:scale-105 transition-all">
+            ${this.currentAgent.avatar || "✨"}
+          </div>
+          <span class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#0A0D14] border border-cyan-400/40 flex items-center justify-center text-[10px]">
+            ⚡
+          </span>
         </div>
-        <h2 class="text-2xl font-bold mb-2 gradient-text">${this.currentAgent.name}</h2>
-        <p class="text-sm text-slate-400 mb-6 leading-relaxed">
-          ${this.currentAgent.description || "Hãy nhập câu hỏi bên dưới để bắt đầu tương tác với chuyên gia AI."}
+
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 text-[11px] font-mono tracking-widest uppercase mb-3">
+          <span>DEEPSEEK HARNESS • PRO WORKSPACE</span>
+        </div>
+
+        <h1 class="text-3xl sm:text-4xl font-black mb-1 text-white tracking-tight flex items-center gap-2 justify-center">
+          <span>Nexora<span class="text-cyan-400">+</span></span>
+          <span class="text-xl sm:text-2xl font-extrabold text-slate-300 tracking-wider">探索未至之境</span>
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed max-w-lg">
+          ${this.currentAgent.description || "Nền tảng trí tuệ nhân tạo DeepSeek Harness kết hợp Multi-Agent và Wallpaper Engine."}
         </p>
 
+        <!-- Quick Filter Pills -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-8 text-xs font-mono">
+          <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/10 text-slate-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>默认工作区</span>
+          </span>
+          <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/10 text-slate-300 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>DeepSeek-V3.1-Flash</span>
+          </span>
+          <button onclick="document.getElementById('chat-input')?.focus()" class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 transition-all flex items-center gap-1">
+            <span>+ 工作区内搜索</span>
+          </button>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full text-left">
-          <button onclick="Chat.setQuickPrompt('1 + 1 bằng mấy')" class="p-3.5 rounded-xl bg-slate-900/60 hover:bg-[#7C5CFC]/10 border border-white/5 hover:border-[#7C5CFC]/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <span>⚡ 1 + 1 bằng mấy?</span>
-            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#22D3EE] transition-colors"></i>
+          <button onclick="Chat.setQuickPrompt('1 + 1 bằng mấy')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
+            <div>
+              <div class="font-bold text-slate-200 mb-0.5">⚡ 1 + 1 bằng mấy?</div>
+              <div class="text-[11px] text-slate-500">Toán học và logic cơ bản</div>
+            </div>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
           </button>
-          <button onclick="Chat.setQuickPrompt('Bạn có thể trả lời câu hỏi của tôi được không?')" class="p-3.5 rounded-xl bg-slate-900/60 hover:bg-[#7C5CFC]/10 border border-white/5 hover:border-[#7C5CFC]/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <span>💬 Bạn có thể trả lời câu hỏi của tôi?</span>
-            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#22D3EE] transition-colors"></i>
+          <button onclick="Chat.setQuickPrompt('Code mẫu C++')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
+            <div>
+              <div class="font-bold text-slate-200 mb-0.5">💻 Code mẫu C++ OOP & STL</div>
+              <div class="text-[11px] text-slate-500">Chương trình C++ chuẩn hiện đại</div>
+            </div>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
           </button>
-          <button onclick="Chat.setQuickPrompt('Viết một đoạn code Python tính số Fibonacci với giải thích')" class="p-3.5 rounded-xl bg-slate-900/60 hover:bg-[#7C5CFC]/10 border border-white/5 hover:border-[#7C5CFC]/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <span>💻 Viết code Python Fibonacci</span>
-            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#22D3EE] transition-colors"></i>
+          <button onclick="Chat.setQuickPrompt('Viết một đoạn code Python tính số Fibonacci với giải thích')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
+            <div>
+              <div class="font-bold text-slate-200 mb-0.5">🐍 Code Python Fibonacci</div>
+              <div class="text-[11px] text-slate-500">Tối ưu thuật toán O(n)</div>
+            </div>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
           </button>
-          <button onclick="Chat.setQuickPrompt('Lập kế hoạch kinh doanh ngắn gọn cho một dự án AI')" class="p-3.5 rounded-xl bg-slate-900/60 hover:bg-[#7C5CFC]/10 border border-white/5 hover:border-[#7C5CFC]/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <span>🚀 Lập kế hoạch kinh doanh dự án AI</span>
-            <i data-lucide="arrow-right" class="w-3.5 h-3.5 text-slate-500 group-hover:text-[#22D3EE] transition-colors"></i>
+          <button onclick="Chat.setQuickPrompt('Lập kế hoạch kinh doanh ngắn gọn cho một dự án AI')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
+            <div>
+              <div class="font-bold text-slate-200 mb-0.5">🚀 Kế hoạch kinh doanh AI</div>
+              <div class="text-[11px] text-slate-500">Mô hình Lean Canvas & AIDA</div>
+            </div>
+            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
           </button>
         </div>
       </div>
@@ -456,14 +497,24 @@ const Chat = {
   },
 
   clearThinking(liveBubble) {
-    if (!liveBubble) return;
-    const thinking = liveBubble.querySelector(".ai-thinking-box") || liveBubble.querySelector("#ai-thinking-box") || document.querySelector(".ai-thinking-box");
-    if (thinking) thinking.remove();
-    const parent = liveBubble.closest(".flex-1");
-    if (parent) {
-      const statusEl = parent.querySelector(".ai-status-text");
-      if (statusEl) statusEl.textContent = "Vừa xong";
+    if (liveBubble) {
+      const internalThinking = liveBubble.querySelectorAll(".ai-thinking-box, [id*='thinking']");
+      internalThinking.forEach(el => el.remove());
     }
+    document.querySelectorAll(".ai-thinking-box").forEach(el => el.remove());
+
+    if (liveBubble) {
+      const parent = liveBubble.closest(".flex-1");
+      if (parent) {
+        const statusEl = parent.querySelector(".ai-status-text");
+        if (statusEl) statusEl.textContent = "Vừa xong";
+      }
+    }
+    document.querySelectorAll(".ai-status-text").forEach(el => {
+      if (el.textContent.includes("suy nghĩ")) {
+        el.textContent = "Vừa xong";
+      }
+    });
   },
 
   finishStreaming(liveBubble) {
@@ -487,6 +538,9 @@ const Chat = {
 
     if (geminiKey) {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${geminiKey}`;
         const payload = {
           contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -502,6 +556,7 @@ const Chat = {
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
           body: JSON.stringify(payload)
         });
 
@@ -528,6 +583,7 @@ const Chat = {
                   const parsed = JSON.parse(dataStr);
                   const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
                   if (text) {
+                    clearTimeout(timeoutId);
                     if (!hasCleared) {
                       this.clearThinking(liveBubble);
                       if (liveBubble) liveBubble.innerHTML = "";
@@ -546,94 +602,12 @@ const Chat = {
           if (accText.trim()) return;
         }
       } catch (e) {
-        console.warn("Direct Gemini stream failed, falling back to instant engine:", e);
+        console.warn("Direct Gemini stream timed out or failed:", e);
       }
     }
 
-    // 2. High-Intelligence Universal Generative AI Stream with strict first-chunk timeout
-    try {
-      const controller = new AbortController();
-      let firstChunkReceived = false;
-      const timeoutId = setTimeout(() => {
-        if (!firstChunkReceived) {
-          controller.abort();
-        }
-      }, 2500);
-
-      const messages = [];
-      let fullSys = this.currentAgent?.system_instructions || "";
-      const memContext = this.getMemoryContext();
-      if (memContext) fullSys = (fullSys ? fullSys + "\n\n" : "") + memContext;
-      if (fullSys) {
-        messages.push({ role: "system", content: fullSys });
-      }
-      messages.push({ role: "user", content: prompt });
-
-      const res = await fetch("https://text.pollinations.ai/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
-        body: JSON.stringify({
-          messages: messages,
-          model: "openai",
-          stream: true
-        })
-      });
-
-      if (res.ok) {
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        let accText = "";
-        let buf = "";
-        let hasCleared = false;
-
-        while (true) {
-          const { value, done } = await reader.read();
-          if (done) break;
-
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split("\n");
-          buf = lines.pop();
-
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("data: ")) {
-              const dataStr = trimmed.slice(6).trim();
-              if (dataStr === "[DONE]") break;
-              try {
-                const parsed = JSON.parse(dataStr);
-                const delta = parsed.choices?.[0]?.delta?.content || "";
-                if (delta) {
-                  if (!firstChunkReceived) {
-                    firstChunkReceived = true;
-                    clearTimeout(timeoutId);
-                  }
-                  if (!hasCleared) {
-                    this.clearThinking(liveBubble);
-                    if (liveBubble) liveBubble.innerHTML = "";
-                    hasCleared = true;
-                  }
-                  accText += delta;
-                  if (liveBubble) {
-                    liveBubble.innerHTML = this.parseMarkdown(accText);
-                    this.scrollToBottom();
-                  }
-                }
-              } catch (e) {}
-            }
-          }
-        }
-
-        if (accText.trim()) {
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn("Universal AI stream aborted or failed, switching to instant engine:", e);
-    }
-
-    // 3. Fallback High-speed intelligent local reasoning engine
-    // ALWAYS CLEAR thinking aura and status text immediately before answering
+    // 2. High-speed Fallback Intelligent Local Reasoning Engine
+    // Immediately clear all thinking boxes and stream answer cleanly
     this.clearThinking(liveBubble);
     if (liveBubble) liveBubble.innerHTML = "";
 
@@ -641,14 +615,15 @@ const Chat = {
     const words = fullText.split(/(\s+)/);
     let currentText = "";
 
-    // Stream out tokens at ultra-fast pace (8ms per word)
+    // Stream tokens at high speed
     for (const w of words) {
+      if (this.shouldAbort) break;
       currentText += w;
       if (liveBubble) {
         liveBubble.innerHTML = this.parseMarkdown(currentText);
         this.scrollToBottom();
       }
-      await new Promise(r => setTimeout(r, 8));
+      await new Promise(r => setTimeout(r, 6));
     }
   },
 
@@ -1032,7 +1007,7 @@ Chào bạn, dựa trên câu hỏi của bạn, **${agent.name}** đã tổng h
     this.shouldAbort = true;
     this.isStreaming = false;
     this.toggleStopButton(false);
-    const liveBubble = document.getElementById("ai-live-bubble");
+    const liveBubble = document.querySelector(".ai-live-bubble") || document.getElementById("ai-live-bubble");
     this.clearThinking(liveBubble);
     if (liveBubble) {
       liveBubble.classList.remove("streaming-cursor");

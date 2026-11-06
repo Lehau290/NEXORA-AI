@@ -341,3 +341,88 @@ html.light .markdown-body code:not(pre code) {
 .harness-audio-bar:nth-child(5) { animation-delay: 0.5s; }
 .harness-audio-bar:nth-child(6) { animation-delay: 0.3s; }
 .harness-audio-bar:nth-child(7) { animation-delay: 0.6s; }
+
+
+/* ============================================================
+   DEEPSEEK HARNESS WALLPAPER ENGINE THEME & LIQUID GLASS
+   ============================================================ */
+.dsh-wallpaper-bg {
+  background: 
+    radial-gradient(ellipse at 80% 35%, rgba(34, 211, 238, 0.12) 0%, transparent 65%),
+    radial-gradient(ellipse at 20% 75%, rgba(124, 92, 252, 0.12) 0%, transparent 60%),
+    linear-gradient(to right, rgba(7, 9, 14, 0.94) 0%, rgba(7, 9, 14, 0.82) 45%, rgba(7, 9, 14, 0.35) 100%),
+    url('../images/wallpaper_muse.png') right 5% center / contain no-repeat,
+    #07090E !important;
+  background-attachment: fixed !important;
+}
+
+.dsh-liquid-glass {
+  background: rgba(14, 18, 28, 0.78) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45) !important;
+}
+
+.dsh-capsule-input {
+  background: rgba(18, 22, 34, 0.88) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(34, 211, 238, 0.28) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 238, 0.12) !important;
+  border-radius: 24px !important;
+}
+
+.dsh-mascot-container {
+  position: fixed;
+  bottom: 24px;
+  right: 28px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: auto;
+}
+.dsh-mascot-bubble {
+  background: rgba(18, 22, 34, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  max-width: 220px;
+  font-size: 11px;
+  color: #F8FAFC;
+  animation: floatBubble 3s ease-in-out infinite;
+}
+.dsh-mascot-img {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.dsh-mascot-img:hover {
+  transform: scale(1.12) translateY(-4px);
+}
+@keyframes floatBubble {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+
+/* Dark mode autofill fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: #f8fafc !important;
+  -webkit-box-shadow: 0 0 0px 1000px #0b0f19 inset !important;
+  box-shadow: 0 0 0px 1000px #0b0f19 inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  caret-color: #f8fafc !important;
+}
+

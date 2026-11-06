@@ -41,9 +41,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <!-- Custom Styles -->
+  <link rel="stylesheet" href="static/css/splash.css">
   <link rel="stylesheet" href="static/css/style.css">
 </head>
-<body class="bg-[#0B0D12] text-[#F8FAFC] antialiased min-h-screen flex flex-col selection:bg-[#7C5CFC]/30 selection:text-[#22D3EE]">
+<body class="bg-[#0B0D12] text-[#F8FAFC] antialiased min-h-screen flex flex-col selection:bg-[#7C5CFC]/30 selection:text-[#22D3EE] dsh-wallpaper-bg">
 
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none"></div>
@@ -113,7 +114,7 @@
   <div class="flex-1 flex overflow-hidden">
 
     <!-- APP SIDEBAR (Shown inside Dashboard/Chat/Workflows/etc.) -->
-    <aside id="app-sidebar" class="hidden w-64 glass-panel border-r border-white/5 flex flex-col justify-between flex-shrink-0 z-30 transition-all">
+    <aside id="app-sidebar" class="hidden w-64 glass-panel dsh-liquid-glass border-r border-white/5 flex flex-col justify-between flex-shrink-0 z-30 transition-all">
       <div class="p-4 flex flex-col h-full overflow-hidden">
         <!-- Logo -->
         <div class="flex items-center justify-between mb-5 px-1">
@@ -131,6 +132,14 @@
           </button>
         </div>
 
+                <!-- DeepSeek Harness Workspaces -->
+        <div class="px-3 py-1.5 mb-3 rounded-xl bg-cyan-950/40 border border-cyan-400/25 text-[11px] font-mono flex items-center justify-between shadow-sm">
+          <span class="text-cyan-300 font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span>默认工作区 (DSH)</span>
+          </span>
+          <span class="text-[10px] text-cyan-400/80 font-bold">V3.1 PRO</span>
+        </div>
         <!-- Primary Action: New Chat -->
         <button id="btn-sidebar-new-chat" class="w-full py-2.5 px-3.5 mb-5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow-lg shadow-[#7C5CFC]/20 hover:shadow-[#7C5CFC]/35 transition-all flex items-center justify-center gap-2">
           <i data-lucide="plus-circle" class="w-4 h-4"></i>
@@ -1132,11 +1141,11 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-white/5">
                   <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu hiện tại</label>
-                    <input id="input-profile-old-pass" type="password" placeholder="Chỉ nhập khi muốn đổi mật khẩu" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                    <input id="input-profile-old-pass" type="password" autocomplete="new-password" placeholder="Chỉ nhập khi muốn đổi mật khẩu" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
                   </div>
                   <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Mật khẩu mới</label>
-                    <input id="input-profile-new-pass" type="password" placeholder="Tối thiểu 6 ký tự" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+                    <input id="input-profile-new-pass" type="password" autocomplete="new-password" placeholder="Tối thiểu 6 ký tự" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
                   </div>
                 </div>
 
@@ -1177,26 +1186,25 @@
               </div>
 
               <!-- Input Form -->
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-                <div>
-                  <label class="block text-xs font-semibold text-slate-300 mb-1">Nhà Cung Cấp</label>
-                  <select id="input-key-provider" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-[#7C5CFC]">
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-3 items-end">
+                <div class="md:col-span-4">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nhà Cung Cấp</label>
+                  <select id="input-key-provider" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-cyan-400">
                     <option value="gemini">Google Gemini (Khuyên dùng)</option>
                     <option value="openai">OpenAI (ChatGPT)</option>
                     <option value="anthropic">Anthropic (Claude)</option>
                   </select>
                 </div>
-                <div class="sm:col-span-2">
-                  <label class="block text-xs font-semibold text-slate-300 mb-1">Mã API Key Secret</label>
-                  <input id="input-key-secret" type="password" placeholder="Dán mã API Key (ví dụ: AIzaSy... hoặc sk-...)" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#7C5CFC]">
+                <div class="md:col-span-8">
+                  <label class="block text-xs font-semibold text-slate-300 mb-1.5">Mã API Key Secret</label>
+                  <div class="flex gap-2">
+                    <input id="input-key-secret" type="password" autocomplete="new-password" placeholder="Dán mã API Key (AIzaSy... hoặc sk-...)" class="flex-1 px-4 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-400">
+                    <button id="btn-save-custom-api-key" class="whitespace-nowrap px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold shadow-lg shadow-cyan-500/20 hover:opacity-95 flex items-center gap-1.5 transition-all">
+                      <i data-lucide="save" class="w-4 h-4"></i>
+                      <span>Lưu & Kích Hoạt</span>
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              <div class="text-right">
-                <button id="btn-save-custom-api-key" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C5CFC] to-[#22D3EE] text-white text-xs font-bold shadow hover:opacity-90 flex items-center gap-2 ml-auto">
-                  <i data-lucide="save" class="w-3.5 h-3.5"></i>
-                  <span>Lưu & Kích Hoạt API Key</span>
-                </button>
               </div>
             </div>
           </div>
@@ -1508,6 +1516,19 @@
     <div id="harness-os-content" class="w-full h-full"></div>
   </div>
 
+    <!-- DEEPSEEK HARNESS FLOATING MASCOT PET (Rope-Maid) -->
+  <div id="dsh-mascot-pet" class="dsh-mascot-container user-only">
+    <div class="dsh-mascot-bubble">
+      <div class="flex items-center justify-between text-[9px] text-[#22D3EE] font-mono font-bold mb-1 border-b border-white/10 pb-0.5">
+        <span>DEEPSEEK HARNESS</span>
+        <span class="text-emerald-400">¥ 45.37 • PRO</span>
+      </div>
+      <p id="dsh-mascot-text" class="text-[11px] leading-relaxed text-slate-200">
+        ✨ 探索未至之境 — "Chào bạn, tôi đã sẵn sàng hỗ trợ bạn!"
+      </p>
+    </div>
+    <img src="static/images/mascot/rope-maid-source-1192x1320.png" alt="DSH Mascot Pet" class="dsh-mascot-img" onclick="HarnessOS.interactMascot()" title="Bấm để trò chuyện với Rope-Maid">
+  </div>
   <!-- Scripts -->
   <script src="static/js/api.js"></script>
   <script src="static/js/chat.js"></script>
@@ -1518,6 +1539,7 @@
   <script src="static/js/history.js"></script>
   <script src="static/js/profile.js"></script>
   <script src="static/js/admin.js"></script>
+  <script src="static/js/splash.js"></script>
   <script src="static/js/harness_os.js"></script>
   <script src="static/js/app.js"></script>
 </body>
