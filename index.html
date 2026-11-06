@@ -96,6 +96,10 @@
         </div>
 
         <div class="user-only hidden flex items-center gap-2">
+          <button onclick="HarnessOS.startSequence()" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-[#7C5CFC]/20 border border-white/10 text-cyan-400 text-xs font-semibold transition-all flex items-center gap-1.5" title="Khởi động lại hiệu ứng Harness OS">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span>Harness OS</span>
+          </button>
           <a href="#/dashboard" class="px-4 py-2 rounded-xl bg-[#7C5CFC] text-white text-xs font-semibold shadow-md hover:bg-[#6845f5] transition-all flex items-center gap-1.5">
             <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
             <span>Vào Dashboard</span>
@@ -1497,6 +1501,13 @@
     </div>
   </div>
 
+  <!-- ============================================================
+       HARNESS OS BOOT OVERLAY (DeepSeek / Nexora Sci-Fi Interface)
+       ============================================================ -->
+  <div id="harness-os-overlay" class="fixed inset-0 z-[9999] hidden bg-black">
+    <div id="harness-os-content" class="w-full h-full"></div>
+  </div>
+
   <!-- Scripts -->
   <script src="static/js/api.js"></script>
   <script src="static/js/chat.js"></script>
@@ -1507,6 +1518,7 @@
   <script src="static/js/history.js"></script>
   <script src="static/js/profile.js"></script>
   <script src="static/js/admin.js"></script>
+  <script src="static/js/harness_os.js"></script>
   <script src="static/js/app.js"></script>
 </body>
 </html>

@@ -151,9 +151,17 @@ const App = {
       API.setToken(res.token);
       API.setUser(res.user);
       closeModal("auth-modal");
-      showToast(`Xin chào mừng ${res.user.full_name}!`, "success");
       this.updateUserUI();
-      window.location.hash = "#/dashboard";
+
+      if (typeof HarnessOS !== "undefined") {
+        HarnessOS.startSequence(res.user, () => {
+          showToast(`Xin chào mừng ${res.user.full_name}!`, "success");
+          window.location.hash = "#/dashboard";
+        });
+      } else {
+        showToast(`Xin chào mừng ${res.user.full_name}!`, "success");
+        window.location.hash = "#/dashboard";
+      }
     } catch (e) {
       showToast(e.message, "error");
     }
@@ -173,9 +181,17 @@ const App = {
           API.setToken(res.token);
           API.setUser(res.user);
           closeModal("auth-modal");
-          showToast(`Đăng nhập thành công! Chào ${res.user.full_name}`, "success");
           this.updateUserUI();
-          window.location.hash = "#/dashboard";
+
+          if (typeof HarnessOS !== "undefined") {
+            HarnessOS.startSequence(res.user, () => {
+              showToast(`Đăng nhập thành công! Chào ${res.user.full_name}`, "success");
+              window.location.hash = "#/dashboard";
+            });
+          } else {
+            showToast(`Đăng nhập thành công! Chào ${res.user.full_name}`, "success");
+            window.location.hash = "#/dashboard";
+          }
         } catch (err) {
           showToast(err.message, "error");
         }
