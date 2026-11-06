@@ -31,12 +31,30 @@ def verify_password(stored_password: str, provided_password: str) -> bool:
     except Exception:
         return False
 
+from contextlib import contextmanager
+
 def get_db():
-    """Get SQLite database connection with row factory."""
-    conn = sqlite3.connect(Config.DATABASE_PATH)
+    """Get SQLite database connection with row factory, WAL mode and timeout."""
+    conn = sqlite3.connect(Config.DATABASE_PATH, timeout=20.0)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA journal_mode = WAL")
+    conn.execute("PRAGMA synchronous = NORMAL")
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
+
+@contextmanager
+def db_transaction():
+    """Context manager for atomic database transactions with auto-commit/rollback."""
+    conn = get_db()
+    try:
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
 
 def init_db():
     """Initialize all 15 required tables and seed data."""
@@ -253,7 +271,36 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
     );
 
+    -- 17. USER PERSONAL API KEYS (For Gemini, OpenAI, Claude, DeepSeek)
+    CREATE TABLE IF NOT EXISTS user_api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        provider TEXT NOT NULL, -- 'gemini', 'openai', 'anthropic', 'deepseek'
+        api_key_encrypted TEXT NOT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, provider),
+        FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    );
+
+    -- 18. AUDIT LOGS (Admin actions & security audit trail)
+    CREATE TABLE IF NOT EXISTS audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        admin_id INTEGER,
+        action TEXT NOT NULL,
+        target_type TEXT,
+        target_id INTEGER,
+        details TEXT,
+        ip_address TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES users (id) ON DELETE SET NULL
+    );
+
     -- INDEXES FOR MAXIMUM QUERY SPEED
+    CREATE INDEX IF NOT EXISTS idx_user_api_keys ON user_api_keys(user_id, provider);
+    CREATE INDEX IF NOT EXISTS idx_ai_memories_user ON ai_memories(user_id);
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_admin ON audit_logs(admin_id);
     CREATE INDEX IF NOT EXISTS idx_messages_conv ON messages(conversation_id);
     CREATE INDEX IF NOT EXISTS idx_conversations_user ON conversations(user_id);
     CREATE INDEX IF NOT EXISTS idx_chunks_doc ON document_chunks(document_id);
@@ -511,6 +558,36 @@ def init_db():
             (1, 'user', 'Xin chào NEXORA AI! Hãy cho tôi biết tổng quan về nền tảng Multi-Agent này.', 'user', 0),
             (1, 'assistant', 'Chào mừng bạn đến với **NEXORA AI** – Nền tảng Đa Tác Nhân Trí Tuệ Nhân Tạo thế hệ mới! 🚀\\n\\nTại NEXORA AI, bạn không chỉ trò chuyện với một mô hình AI đơn lẻ, mà có cả một **đội ngũ chuyên gia AI chuyên trách** luôn sẵn sàng:\\n\\n- 💻 **AI Coding Agent**: Viết code, debug và giải thích thuật toán.\\n- 🔬 **AI Research Agent**: Nghiên cứu sâu sắc, trích dẫn tài liệu chuẩn xác.\\n- ✍️ **AI Writing Agent**: Soạn thảo văn bản, email và bài viết chuyên nghiệp.\\n- 📊 **AI Data Analyst**: Đọc bảng biểu, tính toán thống kê và trực quan hóa.\\n- 🚀 **Multi-Agent Workflow**: Phối hợp cùng lúc 5 AI Agents để giải quyết một dự án lớn từ A-Z!\\n\\nBạn cần tôi hỗ trợ việc gì ngay hôm nay?', 'gemini-2.0-flash', 185)
         """)
+
+    # Run automatic column migrations
+    cursor.execute("PRAGMA table_info(users)")
+    user_cols = [row["name"] for row in cursor.fetchall()]
+    if "last_login_at" not in user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN last_login_at DATETIME")
+    if "preferences" not in user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN preferences TEXT DEFAULT '{}'")
+
+    # Seed DeepSeek Harness Muse Agent if not present
+    cursor.execute("SELECT id FROM agents WHERE slug = 'dsh-muse-agent'")
+    if not cursor.fetchone():
+        cursor.execute("""
+            INSERT INTO agents 
+            (name, slug, avatar, description, category_id, system_instructions, role_desc, expertise, response_tone, ai_model, tools_enabled, is_system, is_active, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "DeepSeek Harness Muse",
+            "dsh-muse-agent",
+            "✨",
+            "Trợ lý trí tuệ nhân tạo chuyên sâu DeepSeek Harness OS. Khám phá tri thức 未至之境, tối ưu hóa suy luận và kiến trúc hệ thống hiện đại.",
+            cat_map.get("general", 1),
+            "Bạn là DeepSeek Harness Muse - chuyên gia AI cốt lõi của không gian làm việc DeepSeek Harness kết hợp NEXORA AI. Bạn giải quyết mọi bài toán kỹ thuật, lập trình, toán học, phân tích hệ thống và sáng tạo nội dung với phong cách chuẩn xác, thanh lịch và thông tuệ.",
+            "Chuyên gia AI DeepSeek Harness",
+            "DeepSeek V3, Kiến trúc phần mềm, Thuật toán, Tối ưu hóa suy luận, Khoa học dữ liệu.",
+            "Sắc bén, học thuật, sâu sắc và công nghệ cao",
+            "gemini-2.0-flash",
+            json.dumps(["web_search", "code_interpreter", "rag"]),
+            1, 1, 1
+        ))
 
     conn.commit()
     conn.close()

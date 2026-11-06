@@ -267,6 +267,82 @@ class AnthropicProvider(BaseAIProvider):
         except requests.exceptions.RequestException as e:
             raise AIProviderException(f"Lỗi Anthropic: {str(e)}")
 
+class DeepSeekProvider(BaseAIProvider):
+    """DeepSeek Official API Provider (deepseek-chat V3, deepseek-reasoner R1)."""
+    
+    def __init__(self, api_key: str = None):
+        self.api_key = api_key or os.getenv("DEEPSEEK_API_KEY")
+
+    def _check_key(self):
+        if not self.api_key:
+            raise AIProviderException(
+                "Chưa cấu hình DeepSeek API Key. Vui lòng thêm DEEPSEEK_API_KEY để kích hoạt mô hình DeepSeek V3/R1.",
+                code="API_KEY_REQUIRED"
+            )
+
+    def stream_generate(self, messages: List[Dict[str, str]], system_prompt: str = "", model: str = None, **kwargs) -> Generator[str, None, None]:
+        self._check_key()
+        model = model or "deepseek-chat"
+        formatted = []
+        if system_prompt:
+            formatted.append({"role": "system", "content": system_prompt})
+        formatted.extend(messages)
+
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": formatted,
+            "stream": True,
+            "temperature": kwargs.get("temperature", 0.7)
+        }
+        try:
+            res = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json=payload, stream=True, timeout=60)
+            if res.status_code != 200:
+                raise AIProviderException(f"DeepSeek API Error ({res.status_code}): {res.text}")
+            
+            for line in res.iter_lines(decode_unicode=True):
+                if line and line.startswith("data: "):
+                    data_str = line[6:].strip()
+                    if data_str == "[DONE]":
+                        break
+                    try:
+                        data_json = json.loads(data_str)
+                        choices = data_json.get("choices", [])
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
+                    except json.JSONDecodeError:
+                        continue
+        except requests.exceptions.RequestException as e:
+            raise AIProviderException(f"Không thể kết nối đến DeepSeek API: {str(e)}")
+
+    def generate(self, prompt: str, system_prompt: str = "", model: str = None, **kwargs) -> Dict[str, Any]:
+        self._check_key()
+        model = model or "deepseek-chat"
+        msgs = []
+        if system_prompt:
+            msgs.append({"role": "system", "content": system_prompt})
+        msgs.append({"role": "user", "content": prompt})
+        headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json"
+        }
+        try:
+            res = requests.post("https://api.deepseek.com/chat/completions", headers=headers, json={"model": model, "messages": msgs}, timeout=60)
+            if res.status_code != 200:
+                raise AIProviderException(f"DeepSeek API Error: {res.text}")
+            data = res.json()
+            text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+            tokens = data.get("usage", {}).get("total_tokens", len(text) // 4)
+            return {"text": text, "tokens": tokens, "model": model}
+        except requests.exceptions.RequestException as e:
+            raise AIProviderException(f"Lỗi DeepSeek: {str(e)}")
+
 class FreeUniversalAIProvider(BaseAIProvider):
     """Free Universal Generative AI Provider with high intelligence and real streaming.
     Answers any question in all languages, coding, mathematics, literature without requiring an API key.
@@ -344,6 +420,10 @@ def get_ai_provider(provider_name: str = None, user_api_key: str = None) -> Base
         if user_api_key or (Config.OPENAI_API_KEY and Config.OPENAI_API_KEY.strip()):
             return OpenAIProvider(api_key=user_api_key)
         return FreeUniversalAIProvider()
+    elif "deepseek" in provider_name:
+        if user_api_key or os.getenv("DEEPSEEK_API_KEY"):
+            return DeepSeekProvider(api_key=user_api_key)
+        return FreeUniversalAIProvider()
     elif "claude" in provider_name or "anthropic" in provider_name:
         if user_api_key or (Config.ANTHROPIC_API_KEY and Config.ANTHROPIC_API_KEY.strip()):
             return AnthropicProvider(api_key=user_api_key)
@@ -357,6 +437,7 @@ def check_available_keys() -> Dict[str, bool]:
         "gemini": bool(Config.GEMINI_API_KEY and Config.GEMINI_API_KEY.strip()),
         "openai": bool(Config.OPENAI_API_KEY and Config.OPENAI_API_KEY.strip()),
         "anthropic": bool(Config.ANTHROPIC_API_KEY and Config.ANTHROPIC_API_KEY.strip()),
+        "deepseek": bool(os.getenv("DEEPSEEK_API_KEY", "").strip()),
         "universal": True
     }
 

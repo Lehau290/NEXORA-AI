@@ -314,7 +314,18 @@ def stream_chat():
         yield f"event: init\ndata: {json.dumps({'conversation_id': conv_id, 'citations': citations})}\n\n"
 
         try:
-            provider = get_ai_provider()
+            # Check user personal API key from user_api_keys table
+            user_api_key = None
+            try:
+                db_k = get_db()
+                k_row = db_k.execute("SELECT api_key_encrypted FROM user_api_keys WHERE user_id = ? AND is_active = 1 LIMIT 1", (user_id,)).fetchone()
+                if k_row:
+                    user_api_key = k_row["api_key_encrypted"]
+                db_k.close()
+            except Exception:
+                pass
+
+            provider = get_ai_provider(user_api_key=user_api_key)
             for chunk in provider.stream_generate(history, system_prompt=system_prompt, model=agent_model):
                 full_response_parts.append(chunk)
                 yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"

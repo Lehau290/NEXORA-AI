@@ -101,6 +101,12 @@ def login():
     if not verify_password(user["password_hash"], password):
         return jsonify({"success": False, "error": "Tài khoản hoặc mật khẩu không chính xác."}), 401
 
+    # Update last login timestamp
+    conn_up = get_db()
+    conn_up.execute("UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?", (user["id"],))
+    conn_up.commit()
+    conn_up.close()
+
     token = create_access_token(user["id"], user["username"], user["role"])
 
     return jsonify({
@@ -187,3 +193,75 @@ def update_profile():
 
     return jsonify({"success": True, "message": "Cập nhật hồ sơ tài khoản thành công!"})
 
+
+@auth_bp.route("/refresh-token", methods=["POST"])
+@token_required
+def refresh_token():
+    user = g.current_user
+    new_token = create_access_token(user["id"], user["username"], user["role"])
+    return jsonify({
+        "success": True,
+        "token": new_token,
+        "message": "Đã làm mới phiên đăng nhập thành công."
+    })
+
+@auth_bp.route("/keys", methods=["GET"])
+@token_required
+def get_user_keys():
+    user_id = g.current_user["id"]
+    conn = get_db()
+    rows = conn.execute("""
+        SELECT provider, is_active, updated_at
+        FROM user_api_keys
+        WHERE user_id = ?
+    """, (user_id,)).fetchall()
+    conn.close()
+    
+    configured = {r["provider"]: bool(r["is_active"]) for r in rows}
+    return jsonify({
+        "success": True,
+        "keys": configured
+    })
+
+@auth_bp.route("/keys", methods=["POST"])
+@token_required
+def save_user_key():
+    data = request.get_json() or {}
+    provider = data.get("provider", "gemini").lower().strip()
+    api_key = data.get("api_key", "").strip()
+
+    if not api_key:
+        return jsonify({"success": False, "error": "Vui lòng nhập API Key hợp lệ."}), 400
+
+    if provider not in ("gemini", "openai", "anthropic", "deepseek"):
+        return jsonify({"success": False, "error": f"Nhà cung cấp {provider} chưa được hỗ trợ."}), 400
+
+    user_id = g.current_user["id"]
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO user_api_keys (user_id, provider, api_key_encrypted, is_active, updated_at)
+        VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+        ON CONFLICT(user_id, provider) DO UPDATE SET
+            api_key_encrypted = excluded.api_key_encrypted,
+            is_active = 1,
+            updated_at = CURRENT_TIMESTAMP
+    """, (user_id, provider, api_key))
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "message": f"Đã lưu và kích hoạt khóa API {provider.upper()} thành công!"
+    })
+
+@auth_bp.route("/keys/<provider>", methods=["DELETE"])
+@token_required
+def delete_user_key(provider: str):
+    provider = provider.lower().strip()
+    user_id = g.current_user["id"]
+    conn = get_db()
+    conn.execute("DELETE FROM user_api_keys WHERE user_id = ? AND provider = ?", (user_id, provider))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True, "message": f"Đã gỡ bỏ khóa API {provider.upper()}."})

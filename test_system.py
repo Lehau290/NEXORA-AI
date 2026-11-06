@@ -9,7 +9,7 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 def run_tests():
     client = app.test_client()
-    print("=== BAT DAU KIEM THU HE THONG NEXORA AI ===")
+    print("=== BAT DAU KIEM THU TOAN DIEN BACKEND & DATABASE NEXORA AI ===")
 
     # 1. Test Index HTML
     res = client.get("/")
@@ -31,12 +31,14 @@ def run_tests():
     assert len(cats) >= 8, f"Expected 8 categories, got {len(cats)}"
     print(f"✓ 3. Thư viện danh mục Agents: OK ({len(cats)} categories)")
 
-    # 4. Test Agents List
+    # 4. Test Agents List (includes standard agents + DeepSeek Muse)
     res = client.get("/api/agents")
     assert res.status_code == 200
     agents = res.get_json().get("agents", [])
-    assert len(agents) >= 8, f"Expected at least 8 agents, got {len(agents)}"
-    print(f"✓ 4. Thư viện 8 AI Agents chuẩn: OK ({len(agents)} agents)")
+    assert len(agents) >= 9, f"Expected at least 9 agents, got {len(agents)}"
+    muse_agent = next((a for a in agents if a["slug"] == "dsh-muse-agent"), None)
+    assert muse_agent is not None, "DeepSeek Harness Muse agent not found in database"
+    print(f"✓ 4. Thư viện AI Agents & DeepSeek Muse: OK ({len(agents)} agents)")
 
     # 5. Test Demo User Login
     res = client.post("/api/auth/login", json={
@@ -85,6 +87,7 @@ def run_tests():
     assert res.status_code in (200, 201), f"Upload failed: {res.data}"
     upload_res = res.get_json()
     assert upload_res["success"] is True
+    doc_id = upload_res["document"]["id"]
     print(f"✓ 9. Knowledge Base Upload & RAG Chunking: OK (Created {upload_res['document']['chunk_count']} chunks)")
 
     # 10. Test RAG Semantic Search
@@ -95,6 +98,9 @@ def run_tests():
     search_res = res.get_json()
     assert len(search_res["results"]) > 0, "RAG search returned 0 results"
     print(f"✓ 10. RAG Search & Chunk Retrieval: OK (Found {len(search_res['results'])} matching chunks)")
+
+    # Clean up uploaded test document from database
+    client.delete(f"/api/knowledge/documents/{doc_id}", headers={"Authorization": f"Bearer {demo_token}"})
 
     # 11. Test Multi-Agent Workflow Creation
     res = client.post("/api/workflows/create", json={
@@ -120,7 +126,74 @@ def run_tests():
     assert res.status_code in (200, 201), f"Agent create failed: {res.data}"
     print("✓ 12. Agent Studio (Tự tạo Custom Agent): OK")
 
-    print("\n🎉 TAT CA 12/12 BAI KIEM THU DEU THANH CONG 100%!")
+    # 13. Test User Personal API Keys Management (Gemini / OpenAI / DeepSeek)
+    res = client.post("/api/auth/keys", json={
+        "provider": "gemini",
+        "api_key": "AIzaSyTestMockKey12345"
+    }, headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200, f"Save user key failed: {res.data}"
+    
+    res = client.get("/api/auth/keys", headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    keys_res = res.get_json().get("keys", {})
+    assert keys_res.get("gemini") is True
+    print("✓ 13. Quan ly User Personal API Keys (user_api_keys): OK")
+
+    # 14. Test Continuous Self-Learning Memory (ChatGPT / Gemini Memory)
+    res = client.post("/api/chat/memory", json={
+        "topic": "Sở thích lập trình",
+        "content": "Người dùng là lập trình viên chuyên sâu C++ và AI Agents"
+    }, headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    mem_res = res.get_json()
+    assert mem_res["success"] is True
+    mem_id = mem_res["memory_id"]
+
+    res = client.get("/api/chat/memory", headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    memories = res.get_json().get("memories", [])
+    assert any(m["id"] == mem_id for m in memories)
+    print("✓ 14. AI Continuous Self-Learning Memory (ai_memories): OK")
+
+    # 15. Test Conversation Management (Rename, Favorite, Export)
+    # Create conversation
+    res = client.post("/api/chat/conversations/create", json={
+        "title": "Hội thoại thử nghiệm Backend"
+    }, headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 201
+    c_id = res.get_json()["conversation"]["id"]
+
+    # Rename
+    res = client.post(f"/api/chat/conversations/{c_id}/rename", json={
+        "title": "Hội thoại đã đổi tên thành công"
+    }, headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+
+    # Toggle favorite
+    res = client.post(f"/api/chat/conversations/{c_id}/favorite", headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    assert res.get_json()["is_favorite"] == 1
+
+    # Export conversation as TXT
+    res = client.get(f"/api/chat/conversations/{c_id}/export?format=txt", headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    assert b"NEXORA AI CONVERSATION EXPORT" in res.data
+    print("✓ 15. Quan ly hoi thoai (Doi ten, Yeu thich, Export TXT): OK")
+
+    # 16. Test Token Refresh
+    res = client.post("/api/auth/refresh-token", headers={"Authorization": f"Bearer {demo_token}"})
+    assert res.status_code == 200
+    assert "token" in res.get_json()
+    print("✓ 16. Refresh JWT Token API: OK")
+
+    # 17. Verify WAL Journal Mode on live connection
+    conn = get_db()
+    journal_mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
+    conn.close()
+    assert journal_mode.lower() == "wal", f"Expected WAL mode, got {journal_mode}"
+    print(f"✓ 17. SQLite Concurrency (WAL Mode): OK ({journal_mode.upper()})")
+
+    print("\n🎉 TAT CA 17/17 BAI KIEM TRA BACKEND & DATABASE DEU THANH CONG 100%!")
 
 if __name__ == "__main__":
     run_tests()
