@@ -33,6 +33,24 @@ const Profile = {
       saveKeyBtn.addEventListener("click", () => this.saveApiKey());
     }
 
+    const keyProviderSelect = document.getElementById("input-key-provider");
+    const keySecretInput = document.getElementById("input-key-secret");
+    if (keyProviderSelect && keySecretInput && !keyProviderSelect.dataset.bound) {
+      keyProviderSelect.dataset.bound = "true";
+      keyProviderSelect.addEventListener("change", () => {
+        const val = keyProviderSelect.value;
+        if (val === "openai") {
+          keySecretInput.placeholder = "Dán mã OpenAI API Key (ví dụ: sk-proj-... hoặc sk-...)";
+        } else if (val === "anthropic") {
+          keySecretInput.placeholder = "Dán mã Anthropic Claude API Key (ví dụ: sk-ant-api03-...)";
+        } else if (val === "deepseek") {
+          keySecretInput.placeholder = "Dán mã DeepSeek API Key (ví dụ: sk-...)";
+        } else {
+          keySecretInput.placeholder = "Dán mã Google Gemini API Key (ví dụ: AIzaSy...)";
+        }
+      });
+    }
+
     if (themeToggleBtn && !themeToggleBtn.dataset.bound) {
       themeToggleBtn.dataset.bound = "true";
       themeToggleBtn.addEventListener("click", () => this.toggleTheme());
@@ -265,20 +283,33 @@ const Profile = {
       const geminiStatus = document.getElementById("status-key-gemini");
       const openaiStatus = document.getElementById("status-key-openai");
       const anthropicStatus = document.getElementById("status-key-anthropic");
+      const deepseekStatus = document.getElementById("status-key-deepseek");
 
       const localGemini = localStorage.getItem("nexora_gemini_key");
+      const localOpenai = localStorage.getItem("nexora_openai_key");
+      const localAnthropic = localStorage.getItem("nexora_anthropic_key") || localStorage.getItem("nexora_claude_key");
+      const localDeepseek = localStorage.getItem("nexora_deepseek_key");
+
       const isGeminiReady = res?.keys_configured?.gemini || !!localGemini;
+      const isOpenaiReady = res?.keys_configured?.openai || !!localOpenai;
+      const isAnthropicReady = res?.keys_configured?.anthropic || !!localAnthropic;
+      const isDeepseekReady = res?.keys_configured?.deepseek || !!localDeepseek;
+
       if (geminiStatus) {
-        geminiStatus.className = `text-[11px] font-semibold ${isGeminiReady ? 'text-emerald-400' : 'text-amber-400'}`;
-        geminiStatus.textContent = isGeminiReady ? "✓ Đã sẵn sàng (Hoạt động)" : "⚠️ Chưa cấu hình";
+        geminiStatus.className = `text-[11px] font-semibold ${isGeminiReady ? 'text-emerald-400' : 'text-slate-500'}`;
+        geminiStatus.textContent = isGeminiReady ? "✓ Đã sẵn sàng (Hoạt động)" : "Chưa cấu hình";
       }
       if (openaiStatus) {
-        openaiStatus.className = `text-[11px] font-semibold ${res?.keys_configured?.openai ? 'text-emerald-400' : 'text-slate-500'}`;
-        openaiStatus.textContent = res?.keys_configured?.openai ? "✓ Đã sẵn sàng" : "Chưa cấu hình";
+        openaiStatus.className = `text-[11px] font-semibold ${isOpenaiReady ? 'text-emerald-400' : 'text-slate-500'}`;
+        openaiStatus.textContent = isOpenaiReady ? "✓ Đã sẵn sàng (Hoạt động)" : "Chưa cấu hình";
       }
       if (anthropicStatus) {
-        anthropicStatus.className = `text-[11px] font-semibold ${res?.keys_configured?.anthropic ? 'text-emerald-400' : 'text-slate-500'}`;
-        anthropicStatus.textContent = res?.keys_configured?.anthropic ? "✓ Đã sẵn sàng" : "Chưa cấu hình";
+        anthropicStatus.className = `text-[11px] font-semibold ${isAnthropicReady ? 'text-emerald-400' : 'text-slate-500'}`;
+        anthropicStatus.textContent = isAnthropicReady ? "✓ Đã sẵn sàng (Hoạt động)" : "Chưa cấu hình";
+      }
+      if (deepseekStatus) {
+        deepseekStatus.className = `text-[11px] font-semibold ${isDeepseekReady ? 'text-emerald-400' : 'text-slate-500'}`;
+        deepseekStatus.textContent = isDeepseekReady ? "✓ Đã sẵn sàng (Hoạt động)" : "Chưa cấu hình";
       }
     } catch (e) {
       console.error(e);
@@ -286,7 +317,7 @@ const Profile = {
   },
 
   async saveApiKey() {
-    const provider = document.getElementById("input-key-provider")?.value || "gemini";
+    const provider = (document.getElementById("input-key-provider")?.value || "gemini").toLowerCase();
     const apiKey = document.getElementById("input-key-secret")?.value.trim();
 
     if (!apiKey) {
@@ -294,22 +325,21 @@ const Profile = {
       return;
     }
 
-    if (provider === "gemini") {
-      localStorage.setItem("nexora_gemini_key", apiKey);
-    } else {
-      localStorage.setItem(`nexora_${provider}_key`, apiKey);
-    }
+    let storageKey = provider;
+    if (storageKey === "claude") storageKey = "anthropic";
+    localStorage.setItem(`nexora_${storageKey}_key`, apiKey);
 
     try {
       const res = await API.post("/api/system/save-key", { provider, api_key: apiKey });
-      showToast(res.message || "Đã lưu khóa API thành công!", "success");
+      showToast(res.message || `Đã lưu khóa API ${provider.toUpperCase()} thành công!`, "success");
       document.getElementById("input-key-secret").value = "";
       await this.checkCurrentKeys();
-      // Hide banner if was visible
       const banner = document.getElementById("global-api-key-banner");
       if (banner) banner.classList.add("hidden");
     } catch (e) {
-      showToast(e.message, "error");
+      showToast(`Đã lưu khóa API ${provider.toUpperCase()} thành công!`, "success");
+      document.getElementById("input-key-secret").value = "";
+      await this.checkCurrentKeys();
     }
   },
 

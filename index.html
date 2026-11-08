@@ -1170,7 +1170,7 @@
               </p>
 
               <!-- Status List -->
-              <div class="grid grid-cols-3 gap-3 mb-4 p-3 rounded-2xl bg-slate-900 border border-white/5 text-center">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 p-3 rounded-2xl bg-slate-900 border border-white/5 text-center">
                 <div>
                   <div class="text-xs font-bold text-slate-300">Google Gemini</div>
                   <div id="status-key-gemini" class="text-[11px] text-amber-400">Đang kiểm tra...</div>
@@ -1183,6 +1183,10 @@
                   <div class="text-xs font-bold text-slate-300">Claude Anthropic</div>
                   <div id="status-key-anthropic" class="text-[11px] text-slate-500">Chưa cấu hình</div>
                 </div>
+                <div>
+                  <div class="text-xs font-bold text-slate-300">DeepSeek AI</div>
+                  <div id="status-key-deepseek" class="text-[11px] text-slate-500">Chưa cấu hình</div>
+                </div>
               </div>
 
               <!-- Input Form -->
@@ -1191,8 +1195,9 @@
                   <label class="block text-xs font-semibold text-slate-300 mb-1.5">Nhà Cung Cấp</label>
                   <select id="input-key-provider" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-white/10 text-xs text-slate-100 focus:outline-none focus:border-cyan-400">
                     <option value="gemini">Google Gemini (Khuyên dùng)</option>
-                    <option value="openai">OpenAI (ChatGPT)</option>
-                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="openai">OpenAI (ChatGPT GPT-4o / o1)</option>
+                    <option value="anthropic">Claude Anthropic (Claude 3.5 Sonnet)</option>
+                    <option value="deepseek">DeepSeek AI (DeepSeek V3 / R1)</option>
                   </select>
                 </div>
                 <div class="md:col-span-8">

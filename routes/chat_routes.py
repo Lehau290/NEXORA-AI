@@ -314,18 +314,31 @@ def stream_chat():
         yield f"event: init\ndata: {json.dumps({'conversation_id': conv_id, 'citations': citations})}\n\n"
 
         try:
+            # Determine appropriate provider based on model
+            prov_name = "gemini"
+            if "gpt" in agent_model.lower() or "openai" in agent_model.lower():
+                prov_name = "openai"
+            elif "claude" in agent_model.lower() or "anthropic" in agent_model.lower():
+                prov_name = "anthropic"
+            elif "deepseek" in agent_model.lower():
+                prov_name = "deepseek"
+
             # Check user personal API key from user_api_keys table
             user_api_key = None
             try:
                 db_k = get_db()
-                k_row = db_k.execute("SELECT api_key_encrypted FROM user_api_keys WHERE user_id = ? AND is_active = 1 LIMIT 1", (user_id,)).fetchone()
+                k_row = db_k.execute("SELECT api_key_encrypted FROM user_api_keys WHERE user_id = ? AND provider = ? AND is_active = 1", (user_id, prov_name)).fetchone()
+                if not k_row:
+                    k_row = db_k.execute("SELECT provider, api_key_encrypted FROM user_api_keys WHERE user_id = ? AND is_active = 1 LIMIT 1", (user_id,)).fetchone()
+                    if k_row:
+                        prov_name = k_row["provider"]
                 if k_row:
                     user_api_key = k_row["api_key_encrypted"]
                 db_k.close()
             except Exception:
                 pass
 
-            provider = get_ai_provider(user_api_key=user_api_key)
+            provider = get_ai_provider(provider_name=prov_name, user_api_key=user_api_key)
             for chunk in provider.stream_generate(history, system_prompt=system_prompt, model=agent_model):
                 full_response_parts.append(chunk)
                 yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"

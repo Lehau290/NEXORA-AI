@@ -122,7 +122,10 @@ const API = {
 
     // 1. System Status
     if (endpoint.includes("/api/system/status")) {
-      const hasKey = !!localStorage.getItem("nexora_gemini_key");
+      const hasGemini = !!localStorage.getItem("nexora_gemini_key");
+      const hasOpenai = !!localStorage.getItem("nexora_openai_key");
+      const hasAnthropic = !!localStorage.getItem("nexora_anthropic_key") || !!localStorage.getItem("nexora_claude_key");
+      const hasDeepseek = !!localStorage.getItem("nexora_deepseek_key");
       return {
         status: "online",
         version: "2.5.0-pro (GitHub Pages Mode)",
@@ -130,20 +133,23 @@ const API = {
         tagline: "One Platform. Multiple AI Agents. Infinite Possibilities.",
         default_provider: "gemini",
         default_model: "gemini-2.0-flash",
-        keys_configured: { gemini: hasKey, openai: false, anthropic: false },
-        has_active_ai_key: hasKey
+        keys_configured: {
+          gemini: hasGemini,
+          openai: hasOpenai,
+          anthropic: hasAnthropic,
+          deepseek: hasDeepseek
+        },
+        has_active_ai_key: hasGemini || hasOpenai || hasAnthropic || hasDeepseek
       };
     }
 
     // 1.1 Save API Key
     if (endpoint.includes("/api/system/save-key")) {
-      const provider = body.provider || "gemini";
+      const provider = (body.provider || "gemini").toLowerCase();
       const key = body.api_key || "";
-      if (provider === "gemini") {
-        localStorage.setItem("nexora_gemini_key", key);
-      } else {
-        localStorage.setItem(`nexora_${provider}_key`, key);
-      }
+      let provKey = provider;
+      if (provKey === "claude") provKey = "anthropic";
+      localStorage.setItem(`nexora_${provKey}_key`, key);
       return {
         success: true,
         message: `Đã kết nối và lưu khóa API ${provider.toUpperCase()} thành công!`

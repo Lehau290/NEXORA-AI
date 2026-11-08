@@ -126,18 +126,19 @@ def run_tests():
     assert res.status_code in (200, 201), f"Agent create failed: {res.data}"
     print("✓ 12. Agent Studio (Tự tạo Custom Agent): OK")
 
-    # 13. Test User Personal API Keys Management (Gemini / OpenAI / DeepSeek)
-    res = client.post("/api/auth/keys", json={
-        "provider": "gemini",
-        "api_key": "AIzaSyTestMockKey12345"
-    }, headers={"Authorization": f"Bearer {demo_token}"})
-    assert res.status_code == 200, f"Save user key failed: {res.data}"
-    
+    # 13. Test User Personal API Keys Management (Gemini, OpenAI, Claude Anthropic, DeepSeek)
+    for p, k in [("gemini", "AIzaSyTestMock123"), ("openai", "sk-proj-TestMock123"), ("anthropic", "sk-ant-api03-TestMock123"), ("deepseek", "sk-deepseek-TestMock123")]:
+        res = client.post("/api/auth/keys", json={"provider": p, "api_key": k}, headers={"Authorization": f"Bearer {demo_token}"})
+        assert res.status_code == 200, f"Save user key for {p} failed: {res.data}"
+
     res = client.get("/api/auth/keys", headers={"Authorization": f"Bearer {demo_token}"})
     assert res.status_code == 200
     keys_res = res.get_json().get("keys", {})
     assert keys_res.get("gemini") is True
-    print("✓ 13. Quan ly User Personal API Keys (user_api_keys): OK")
+    assert keys_res.get("openai") is True
+    assert keys_res.get("anthropic") is True
+    assert keys_res.get("deepseek") is True
+    print("✓ 13. Quan ly User Personal API Keys (Gemini, OpenAI, Claude, DeepSeek): OK")
 
     # 14. Test Continuous Self-Learning Memory (ChatGPT / Gemini Memory)
     res = client.post("/api/chat/memory", json={

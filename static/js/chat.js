@@ -606,6 +606,229 @@ const Chat = {
       }
     }
 
+    // 1.1 Check if user configured an OpenAI API key
+    const openaiKey = localStorage.getItem("nexora_openai_key");
+    if (openaiKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const messages = [];
+        let fullSys = this.currentAgent?.system_instructions || "";
+        const memContext = this.getMemoryContext();
+        if (memContext) fullSys = (fullSys ? fullSys + "\n\n" : "") + memContext;
+        if (fullSys) messages.push({ role: "system", content: fullSys });
+        messages.push({ role: "user", content: prompt });
+
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${openaiKey}`
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: messages,
+            stream: true,
+            temperature: 0.7
+          })
+        });
+
+        if (res.ok) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let accText = "";
+          let buf = "";
+          let hasCleared = false;
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop();
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data: ")) {
+                const dataStr = trimmed.slice(6).trim();
+                if (dataStr === "[DONE]") break;
+                try {
+                  const parsed = JSON.parse(dataStr);
+                  const delta = parsed.choices?.[0]?.delta?.content || "";
+                  if (delta) {
+                    clearTimeout(timeoutId);
+                    if (!hasCleared) {
+                      this.clearThinking(liveBubble);
+                      if (liveBubble) liveBubble.innerHTML = "";
+                      hasCleared = true;
+                    }
+                    accText += delta;
+                    if (liveBubble) {
+                      liveBubble.innerHTML = this.parseMarkdown(accText);
+                      this.scrollToBottom();
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+          if (accText.trim()) return;
+        }
+      } catch (e) {
+        console.warn("Direct OpenAI stream failed:", e);
+      }
+    }
+
+    // 1.2 Check if user configured a Claude Anthropic API key
+    const claudeKey = localStorage.getItem("nexora_anthropic_key") || localStorage.getItem("nexora_claude_key");
+    if (claudeKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        let fullSys = this.currentAgent?.system_instructions || "";
+        const memContext = this.getMemoryContext();
+        if (memContext) fullSys = (fullSys ? fullSys + "\n\n" : "") + memContext;
+
+        const res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-api-key": claudeKey,
+            "anthropic-version": "2023-06-01",
+            "anthropic-dangerous-direct-browser-access": "true"
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: "claude-3-5-sonnet-20241022",
+            max_tokens: 2048,
+            messages: [{ role: "user", content: prompt }],
+            system: fullSys || undefined,
+            stream: true
+          })
+        });
+
+        if (res.ok) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let accText = "";
+          let buf = "";
+          let hasCleared = false;
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split("\n\n");
+            buf = lines.pop();
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const dataStr = line.slice(6).trim();
+                try {
+                  const parsed = JSON.parse(dataStr);
+                  const delta = parsed.delta?.text || "";
+                  if (delta) {
+                    clearTimeout(timeoutId);
+                    if (!hasCleared) {
+                      this.clearThinking(liveBubble);
+                      if (liveBubble) liveBubble.innerHTML = "";
+                      hasCleared = true;
+                    }
+                    accText += delta;
+                    if (liveBubble) {
+                      liveBubble.innerHTML = this.parseMarkdown(accText);
+                      this.scrollToBottom();
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+          if (accText.trim()) return;
+        }
+      } catch (e) {
+        console.warn("Direct Claude stream failed:", e);
+      }
+    }
+
+    // 1.3 Check if user configured a DeepSeek API key
+    const deepseekKey = localStorage.getItem("nexora_deepseek_key");
+    if (deepseekKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 4000);
+        const messages = [];
+        let fullSys = this.currentAgent?.system_instructions || "";
+        const memContext = this.getMemoryContext();
+        if (memContext) fullSys = (fullSys ? fullSys + "\n\n" : "") + memContext;
+        if (fullSys) messages.push({ role: "system", content: fullSys });
+        messages.push({ role: "user", content: prompt });
+
+        const res = await fetch("https://api.deepseek.com/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${deepseekKey}`
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: messages,
+            stream: true,
+            temperature: 0.7
+          })
+        });
+
+        if (res.ok) {
+          const reader = res.body.getReader();
+          const decoder = new TextDecoder("utf-8");
+          let accText = "";
+          let buf = "";
+          let hasCleared = false;
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+
+            buf += decoder.decode(value, { stream: true });
+            const lines = buf.split("\n");
+            buf = lines.pop();
+
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.startsWith("data: ")) {
+                const dataStr = trimmed.slice(6).trim();
+                if (dataStr === "[DONE]") break;
+                try {
+                  const parsed = JSON.parse(dataStr);
+                  const delta = parsed.choices?.[0]?.delta?.content || "";
+                  if (delta) {
+                    clearTimeout(timeoutId);
+                    if (!hasCleared) {
+                      this.clearThinking(liveBubble);
+                      if (liveBubble) liveBubble.innerHTML = "";
+                      hasCleared = true;
+                    }
+                    accText += delta;
+                    if (liveBubble) {
+                      liveBubble.innerHTML = this.parseMarkdown(accText);
+                      this.scrollToBottom();
+                    }
+                  }
+                } catch (e) {}
+              }
+            }
+          }
+          if (accText.trim()) return;
+        }
+      } catch (e) {
+        console.warn("Direct DeepSeek stream failed:", e);
+      }
+    }
+
     // 2. High-speed Fallback Intelligent Local Reasoning Engine
     // Immediately clear all thinking boxes and stream answer cleanly
     this.clearThinking(liveBubble);

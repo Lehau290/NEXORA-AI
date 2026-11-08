@@ -118,7 +118,7 @@ const HarnessOS = {
 
     let isDragging = false;
     let startX = 0, startY = 0;
-    let initialBottom = 85, initialRight = 28;
+    let initialBottom = 120, initialRight = 28;
     let hasMoved = false;
 
     const onMouseDown = (e) => {

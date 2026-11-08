@@ -53,6 +53,25 @@ def create_app():
     @app.route("/api/system/status", methods=["GET"])
     def system_status():
         keys_status = check_available_keys()
+
+        # If user passed token, check their personal user_api_keys too
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            try:
+                from auth import decode_access_token
+                payload = decode_access_token(auth_header.split(" ")[1])
+                user_id = payload.get("sub")
+                if user_id:
+                    conn_u = get_db()
+                    u_keys = conn_u.execute("SELECT provider, is_active FROM user_api_keys WHERE user_id = ? AND is_active = 1", (user_id,)).fetchall()
+                    conn_u.close()
+                    for uk in u_keys:
+                        prov = uk["provider"].lower()
+                        if "claude" in prov: prov = "anthropic"
+                        keys_status[prov] = True
+            except Exception:
+                pass
+
         conn = get_db()
         settings = conn.execute("SELECT key, value FROM system_settings").fetchall()
         settings_map = {row["key"]: row["value"] for row in settings}
@@ -82,18 +101,42 @@ def create_app():
             if not api_key:
                 return jsonify({"success": False, "error": "Vui lòng nhập API Key hợp lệ."}), 400
 
-            # Update in-memory config and .env file
+            # Update in-memory config, environment, and user_api_keys table
+            canonical_prov = "gemini"
             if "gemini" in provider:
                 Config.GEMINI_API_KEY = api_key
                 env_key = "GEMINI_API_KEY"
+                canonical_prov = "gemini"
             elif "openai" in provider:
                 Config.OPENAI_API_KEY = api_key
                 env_key = "OPENAI_API_KEY"
+                canonical_prov = "openai"
             elif "anthropic" in provider or "claude" in provider:
                 Config.ANTHROPIC_API_KEY = api_key
                 env_key = "ANTHROPIC_API_KEY"
+                canonical_prov = "anthropic"
+            elif "deepseek" in provider:
+                os.environ["DEEPSEEK_API_KEY"] = api_key
+                env_key = "DEEPSEEK_API_KEY"
+                canonical_prov = "deepseek"
             else:
                 return jsonify({"success": False, "error": "Nhà cung cấp AI không được hỗ trợ."}), 400
+
+            # Also persist to user_api_keys table in SQLite
+            try:
+                db_k = get_db()
+                db_k.execute("""
+                    INSERT INTO user_api_keys (user_id, provider, api_key_encrypted, is_active, updated_at)
+                    VALUES (?, ?, ?, 1, CURRENT_TIMESTAMP)
+                    ON CONFLICT(user_id, provider) DO UPDATE SET
+                        api_key_encrypted = excluded.api_key_encrypted,
+                        is_active = 1,
+                        updated_at = CURRENT_TIMESTAMP
+                """, (g.current_user["id"], canonical_prov, api_key))
+                db_k.commit()
+                db_k.close()
+            except Exception as e:
+                print(f"Error persisting key to user_api_keys: {e}")
 
             # Persist to .env if writable
             env_path = Config.BASE_DIR / ".env"
