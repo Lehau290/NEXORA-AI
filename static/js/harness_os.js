@@ -35,6 +35,8 @@ const HarnessOS = {
       footer: 'POWERED BY DEEPSEEK'
     };
 
+    this.initMascotDraggable();
+
     window.addEventListener('dsh-startup:done', () => {
       this.active = false;
       document.body.style.overflow = '';
@@ -107,6 +109,71 @@ const HarnessOS = {
       }
       bubble.textContent = next;
     }
+  },
+
+  initMascotDraggable() {
+    const el = document.getElementById('dsh-mascot-pet');
+    if (!el || el.__draggableInit) return;
+    el.__draggableInit = true;
+
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let initialBottom = 85, initialRight = 28;
+    let hasMoved = false;
+
+    const onMouseDown = (e) => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+      isDragging = true;
+      hasMoved = false;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect = el.getBoundingClientRect();
+      initialBottom = window.innerHeight - rect.bottom;
+      initialRight = window.innerWidth - rect.right;
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const onMouseMove = (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
+      const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
+      const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
+      el.style.bottom = ${newBottom}px;
+      el.style.right = ${newRight}px;
+    };
+
+    const onMouseUp = (e) => {
+      isDragging = false;
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    el.addEventListener('mousedown', onMouseDown);
+
+    // Touch support for mobile/touch screens
+    el.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      const rect = el.getBoundingClientRect();
+      initialBottom = window.innerHeight - rect.bottom;
+      initialRight = window.innerWidth - rect.right;
+    }, { passive: true });
+
+    el.addEventListener('touchmove', (e) => {
+      const touch = e.touches[0];
+      const dy = touch.clientY - startY;
+      const dx = touch.clientX - startX;
+      const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
+      const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
+      el.style.bottom = ${newBottom}px;
+      el.style.right = ${newRight}px;
+    }, { passive: true });
   }
 };
 

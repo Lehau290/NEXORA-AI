@@ -374,7 +374,7 @@ html.light .markdown-body code:not(pre code) {
 
 .dsh-mascot-container {
   position: fixed;
-  bottom: 24px;
+  bottom: 85px;
   right: 28px;
   z-index: 40;
   display: flex;

@@ -275,6 +275,10 @@ const App = {
         adminNav.forEach(el => el.classList.add("hidden"));
       }
 
+      if (typeof HarnessOS !== "undefined" && typeof HarnessOS.initMascotDraggable === "function") {
+        setTimeout(() => HarnessOS.initMascotDraggable(), 100);
+      }
+
       this.loadSidebarConversations();
     } else {
       guestNav.forEach(el => el.classList.remove("hidden"));
