@@ -30,9 +30,9 @@ const HarnessOS = {
       brand3b: 'OS',
       orgZh: '深度求索',
       orgEn: 'DEEPSEEK',
-      orgSub: 'DEEPSEEK HARNESS',
-      welcomeBox: 'DEEPSEEK HARNESS',
-      footer: 'POWERED BY DEEPSEEK'
+      orgSub: 'NEXORA AI',
+      welcomeBox: 'NEXORA AI',
+      footer: 'POWERED BY NEXORA AI'
     };
 
     this.initMascotDraggable();
@@ -64,6 +64,7 @@ const HarnessOS = {
     window.__DSH_STARTUP__.theme = 'light';
     window.__DSH_STARTUP__.sound = false;
     window.__DSH_STARTUP__.voice = false;
+    window.__DSH_STARTUP__.welcomeBox = 'NEXORA AI';
     window.__DSH_STARTUP_SKIP__ = false;
 
     // Trigger authentic dsh-startup-screen replay

@@ -96,8 +96,8 @@
     brand3b: 'OS',
     orgZh: '深度求索',
     orgEn: 'DEEPSEEK',
-    orgSub: 'DEEPSEEK HARNESS',
-    welcomeBox: 'DEEPSEEK HARNESS',
+    orgSub: 'NEXORA AI',
+    welcomeBox: 'NEXORA AI',
     footer: 'POWERED BY DEEPSEEK',
     accent: '#ff7500',
     glitchA: '#ff3b30',
@@ -766,7 +766,7 @@
 
   ;(function welcomeLogo() {
     ui.w3.appendChild(svgWhale())
-    ui.w3.appendChild(el('span', 'dsu-w3label', 'D E E P S E E K  ·  H A R N E S S'))
+    ui.w3.appendChild(el('span', 'dsu-w3label', 'N E X O R A  ·  A I'))
   })()
 
   ;(function watermark() {
