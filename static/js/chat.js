@@ -157,60 +157,29 @@ const Chat = {
         </div>
 
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-300 border border-cyan-500/25 text-[11px] font-mono tracking-widest uppercase mb-3">
-          <span>DEEPSEEK HARNESS • PRO WORKSPACE</span>
+          <span>NEXORA AI • PRO WORKSPACE</span>
         </div>
 
         <h1 class="text-3xl sm:text-4xl font-black mb-1 text-white tracking-tight flex items-center gap-2 justify-center">
           <span>Nexora<span class="text-cyan-400">+</span></span>
-          <span class="text-xl sm:text-2xl font-extrabold text-slate-300 tracking-wider">探索未至之境</span>
+          <span class="text-xl sm:text-2xl font-extrabold text-slate-300 tracking-wider">AI Platform</span>
         </h1>
         <p class="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed max-w-lg">
-          ${this.currentAgent.description || "Nền tảng trí tuệ nhân tạo DeepSeek Harness kết hợp Multi-Agent và Wallpaper Engine."}
+          ${this.currentAgent.description || "Nền tảng trí tuệ nhân tạo NEXORA AI kết hợp Multi-Agent và Wallpaper Engine."}
         </p>
 
         <!-- Quick Filter Pills -->
-        <div class="flex flex-wrap items-center justify-center gap-2 mb-8 text-xs font-mono">
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-4 text-xs font-mono">
           <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/10 text-slate-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-            <span>默认工作区</span>
+            <span>Không gian làm việc</span>
           </span>
           <span class="px-3 py-1.5 rounded-xl bg-slate-900/80 border border-white/10 text-slate-300 flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>DeepSeek-V3.1-Flash</span>
           </span>
           <button onclick="document.getElementById('chat-input')?.focus()" class="px-3 py-1.5 rounded-xl bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/30 text-cyan-300 transition-all flex items-center gap-1">
-            <span>+ 工作区内搜索</span>
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full text-left">
-          <button onclick="Chat.setQuickPrompt('1 + 1 bằng mấy')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <div>
-              <div class="font-bold text-slate-200 mb-0.5">⚡ 1 + 1 bằng mấy?</div>
-              <div class="text-[11px] text-slate-500">Toán học và logic cơ bản</div>
-            </div>
-            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
-          </button>
-          <button onclick="Chat.setQuickPrompt('Code mẫu C++')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <div>
-              <div class="font-bold text-slate-200 mb-0.5">💻 Code mẫu C++ OOP & STL</div>
-              <div class="text-[11px] text-slate-500">Chương trình C++ chuẩn hiện đại</div>
-            </div>
-            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
-          </button>
-          <button onclick="Chat.setQuickPrompt('Viết một đoạn code Python tính số Fibonacci với giải thích')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <div>
-              <div class="font-bold text-slate-200 mb-0.5">🐍 Code Python Fibonacci</div>
-              <div class="text-[11px] text-slate-500">Tối ưu thuật toán O(n)</div>
-            </div>
-            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
-          </button>
-          <button onclick="Chat.setQuickPrompt('Lập kế hoạch kinh doanh ngắn gọn cho một dự án AI')" class="p-4 rounded-2xl bg-slate-900/70 hover:bg-cyan-500/10 border border-white/5 hover:border-cyan-400/30 text-xs text-slate-300 transition-all flex items-center justify-between group">
-            <div>
-              <div class="font-bold text-slate-200 mb-0.5">🚀 Kế hoạch kinh doanh AI</div>
-              <div class="text-[11px] text-slate-500">Mô hình Lean Canvas & AIDA</div>
-            </div>
-            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-500 group-hover:text-cyan-400 transition-colors"></i>
+            <span>+ Bắt đầu nhập tin nhắn</span>
           </button>
         </div>
       </div>
