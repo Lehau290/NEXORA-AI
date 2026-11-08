@@ -19,8 +19,8 @@ const HarnessOS = {
       speed: 1,
       requireInteraction: true, // Step 1 & 2 require user confirmation
       allowSkip: true,
-      sound: false, // Muted by default per user request ("đừng có tiếng")
-      voice: false,
+      sound: true, // Enabled with natural AI voice
+      voice: true,
       identity: (API.getUser()?.full_name || 'LÊ TRUNG HẬU').toUpperCase(),
       identityId: '0087',
       accessLevel: '3',
@@ -62,8 +62,8 @@ const HarnessOS = {
     window.__DSH_STARTUP__.identityId = '0087';
     window.__DSH_STARTUP__.accessLevel = user?.role === 'admin' ? 'ROOT' : '3';
     window.__DSH_STARTUP__.theme = 'light';
-    window.__DSH_STARTUP__.sound = false;
-    window.__DSH_STARTUP__.voice = false;
+    window.__DSH_STARTUP__.sound = true;
+    window.__DSH_STARTUP__.voice = true;
     window.__DSH_STARTUP__.welcomeBox = 'NEXORA AI';
     window.__DSH_STARTUP_SKIP__ = false;
 

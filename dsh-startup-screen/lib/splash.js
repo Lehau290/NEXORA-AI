@@ -96,8 +96,8 @@
     brand3b: 'OS',
     orgZh: '深度求索',
     orgEn: 'DEEPSEEK',
-    orgSub: 'DEEPSEEK HARNESS',
-    welcomeBox: 'DEEPSEEK HARNESS',
+    orgSub: 'NEXORA AI',
+    welcomeBox: 'NEXORA AI',
     footer: 'POWERED BY DEEPSEEK',
     accent: '#ff7500',
     glitchA: '#ff3b30',
@@ -766,7 +766,7 @@
 
   ;(function welcomeLogo() {
     ui.w3.appendChild(svgWhale())
-    ui.w3.appendChild(el('span', 'dsu-w3label', 'D E E P S E E K  ·  H A R N E S S'))
+    ui.w3.appendChild(el('span', 'dsu-w3label', 'N E X O R A  ·  A I'))
   })()
 
   ;(function watermark() {
@@ -1631,7 +1631,7 @@
         ui.welcome.classList.add('dsu-in')
         ui.idline.classList.remove('dsu-in')
         /* 欢迎文案亮起的同一刻开口 —— 早于画面会让人以为「话没说完画面就跳了」 */
-        welcome = voice.line(null, null, 'line-6')
+        welcome = voice.line('Welcome to Nexora AI. Authorization granted.', 'Chào mừng bạn đến với NEXORA AI', 'line-6')
         return wait(420)
       })
       .then(function () {
