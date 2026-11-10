@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEXORA AI – Multi AI Agents Platform</title>
   <meta name="description" content="Nền tảng AI Agents chuyên nghiệp - One Platform. Multiple AI Agents. Infinite Possibilities.">
+  <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+  <link rel="alternate icon" type="image/x-icon" href="static/favicon.ico">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1381,14 +1383,20 @@
 
       <!-- Quick 1-Click Login Shortcuts for Evaluator -->
       <div class="mb-6 p-3.5 rounded-2xl bg-slate-900 border border-[#7C5CFC]/30 text-center">
-        <div class="text-[11px] text-slate-400 font-semibold mb-2">Đăng nhập nhanh để trải nghiệm:</div>
-        <div class="grid grid-cols-2 gap-2">
-          <button id="btn-quick-demo-login" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-[#7C5CFC]/20 text-[#22D3EE] border border-white/5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+        <div class="text-[11px] text-slate-400 font-semibold mb-2">Đăng nhập nhanh 1 chạm:</div>
+        <div class="grid grid-cols-3 gap-2">
+          <button type="button" id="btn-quick-owner-login" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all" title="letrunghau / 123456">
+            <span>👨‍💻 Lê Trung Hậu</span>
+          </button>
+          <button type="button" id="btn-quick-admin-login" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all" title="admin / admin123">
+            <span>👑 Admin</span>
+          </button>
+          <button type="button" id="btn-quick-demo-login" class="py-2 px-2 rounded-xl bg-slate-800 hover:bg-[#7C5CFC]/20 text-[#22D3EE] border border-[#22D3EE]/30 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all" title="demouser / demo123">
             <span>⚡ Demo User</span>
           </button>
-          <button id="btn-quick-admin-login" class="py-2 px-3 rounded-xl bg-slate-800 hover:bg-amber-500/20 text-amber-300 border border-white/5 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
-            <span>👑 Admin Portal</span>
-          </button>
+        </div>
+        <div class="text-[10px] text-slate-500 mt-2 font-mono">
+          Gợi ý: <span class="text-emerald-400">letrunghau</span> (123456) • <span class="text-cyan-400">demouser</span> (demo123) • <span class="text-amber-400">admin</span> (admin123)
         </div>
       </div>
 
@@ -1522,7 +1530,7 @@
   </div>
 
     <!-- NEXORA FLOATING MASCOT MAID PET (Rope-Maid) -->
-  <div id="dsh-mascot-pet" class="dsh-mascot-container user-only">
+  <div id="dsh-mascot-pet" class="dsh-mascot-container">
     <div class="dsh-mascot-bubble">
       <div class="flex items-center justify-between text-[9px] text-[#22D3EE] font-mono font-bold mb-1 border-b border-white/10 pb-0.5">
         <span class="flex items-center gap-1 text-cyan-300 font-semibold">🌸 NEXORA MAID</span>

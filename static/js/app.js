@@ -113,10 +113,14 @@ const App = {
   },
 
   bindGlobalEvents() {
-    // Quick Demo Login buttons
+    // Quick Demo / Owner / Admin Login buttons
+    const btnOwner = document.getElementById("btn-quick-owner-login");
     const btnDemo = document.getElementById("btn-quick-demo-login");
     const btnAdmin = document.getElementById("btn-quick-admin-login");
 
+    if (btnOwner) {
+      btnOwner.addEventListener("click", () => this.quickLogin("letrunghau", "123456"));
+    }
     if (btnDemo) {
       btnDemo.addEventListener("click", () => this.quickLogin("demouser", "demo123"));
     }
@@ -275,8 +279,13 @@ const App = {
         adminNav.forEach(el => el.classList.add("hidden"));
       }
 
-      if (typeof HarnessOS !== "undefined" && typeof HarnessOS.initMascotDraggable === "function") {
-        setTimeout(() => HarnessOS.initMascotDraggable(), 100);
+      if (typeof HarnessOS !== "undefined") {
+        if (typeof HarnessOS.initMascotDraggable === "function") {
+          setTimeout(() => HarnessOS.initMascotDraggable(), 100);
+        }
+        if (typeof HarnessOS.updateMascotGreeting === "function") {
+          HarnessOS.updateMascotGreeting();
+        }
       }
 
       this.loadSidebarConversations();

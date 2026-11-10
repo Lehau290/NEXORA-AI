@@ -85,20 +85,20 @@
     voiceVolume: 0.9,
     voiceCue: true,             // 念台词前的一声轻提示
     sfx: 'audio',               // audio=真素材（用户音频里抠的音效）/ synth=现场合成
-    voiceSource: 'asset',       // asset=优先用真声素材 / tts=全部 TTS 合成
+    voiceSource: 'tts',       // tts=dùng giọng đọc AI tự nhiên, không phát file tiếng Trung
     voiceLead: 240,             // 提示音之后留一小段空白再开口
-    identity: 'JOYCE MOORE',    // ← 设置页可改的"身份名称"
+    identity: 'LÊ TRUNG HẬU',    // ← Tên người dùng / identity
     identityId: '0087',
-    accessLevel: '3',
-    brand1: 'DEEPSEEK',
+    accessLevel: 'ROOT',
+    brand1: 'NEXORA',
     brand2: 'SYNTHESIZE INTELLIGENCE',
-    brand3a: 'HARNESS',
-    brand3b: 'OS',
-    orgZh: '深度求索',
-    orgEn: 'DEEPSEEK',
-    orgSub: 'NEXORA AI',
+    brand3a: 'MULTI-AGENT',
+    brand3b: 'AI',
+    orgZh: 'NEXORA AI',
+    orgEn: 'NEXORA',
+    orgSub: 'INTELLIGENCE OS',
     welcomeBox: 'NEXORA AI',
-    footer: 'POWERED BY DEEPSEEK',
+    footer: 'POWERED BY NEXORA MULTI-AGENT PLATFORM',
     accent: '#ff7500',
     glitchA: '#ff3b30',
     glitchB: '#2971b8'
@@ -118,39 +118,39 @@
      `say` 是素材拿不到时的 TTS 兜底文本；`audio` 是素材文件名（不含扩展名）。 */
   var STEPS = [
     {
-      zh: '需要访问许可',
+      zh: 'Cần cấp quyền truy cập',
       en: 'ACCESS PERMISSION REQUIRED',
       say: 'Access permission required.',
-      audio: 'line-1',
-      log: '等待用户授权…',
+      audio: null,
+      log: 'Đang đợi phê duyệt quyền truy cập hệ thống…',
       logEn: 'AWAITING OPERATOR CONSENT',
       badge: 'AUTHORIZATION',
       action: 'grant',
-      btnZh: '授予访问权限',
+      btnZh: 'Cấp quyền truy cập',
       btnEn: 'GRANT ACCESS',
       hold: 900,
       progress: 0.34
     },
     {
-      zh: '身份资料确认',
+      zh: 'Xác thực danh tính',
       en: 'IDENTITY VERIFICATION',
       say: 'Identity verification.',
-      audio: 'line-2',
-      log: '核对身份资料…',
+      audio: null,
+      log: 'Đối chiếu hồ sơ tài khoản NEXORA…',
       logEn: 'MATCHING OPERATOR RECORD',
       badge: 'IDENTITY',
       action: 'confirm',
-      btnZh: '确认身份',
+      btnZh: 'Xác nhận danh tính',
       btnEn: 'CONFIRM IDENTITY',
       hold: 700,
       progress: 0.5
     },
     {
-      zh: '接收访问需求',
+      zh: 'Tiếp nhận yêu cầu',
       en: 'ACCESS REQUEST RECEIVED',
       say: 'Access request received.',
-      audio: 'line-3',
-      log: '接收访问需求，建立会话通道…',
+      audio: null,
+      log: 'Tiếp nhận yêu cầu, thiết lập kênh bảo mật…',
       logEn: 'HANDSHAKE ESTABLISHED',
       badge: 'REQUEST',
       action: 'auto',
@@ -159,11 +159,11 @@
       assembleLogo: true
     },
     {
-      zh: '开始读取权限',
+      zh: 'Khởi tạo không gian làm việc',
       en: 'PERMISSION READ STARTED',
       say: 'Beginning permission read.',
-      audio: 'line-4',
-      log: '开始读取权限，索引工作区与会话…',
+      audio: null,
+      log: 'Khởi tạo không gian làm việc và đồng bộ dữ liệu…',
       logEn: 'READING PERMISSION SET',
       badge: 'READ',
       action: 'auto',
@@ -172,11 +172,11 @@
       hex: true
     },
     {
-      zh: '读取完毕 · 核验通过',
+      zh: 'Hệ thống đã sẵn sàng',
       en: 'READ COMPLETE · VERIFIED',
       say: 'Read complete. Verification passed.',
-      audio: 'line-5',
-      log: '读取完毕，核验通过，权限已授予',
+      audio: null,
+      log: 'Hoàn tất tải dữ liệu, hệ thống NEXORA AI đã sẵn sàng phục vụ',
       logEn: 'PERMISSION AUTHORIZED',
       badge: 'VERIFY',
       action: 'auto',
@@ -1631,7 +1631,7 @@
         ui.welcome.classList.add('dsu-in')
         ui.idline.classList.remove('dsu-in')
         /* 欢迎文案亮起的同一刻开口 —— 早于画面会让人以为「话没说完画面就跳了」 */
-        welcome = voice.line('Welcome to Nexora AI. Authorization granted.', 'Chào mừng bạn đến với NEXORA AI', 'line-6')
+        welcome = voice.line('Welcome to Nexora AI. Authorization granted.', 'Chào mừng bạn đến với NEXORA AI', null)
         return wait(420)
       })
       .then(function () {

@@ -170,6 +170,42 @@ const HarnessOS = {
     }
   },
 
+  // Natural TTS voice for the cute maid mascot
+  speakMaid(text) {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      // Remove kaomoji & emojis so voice reads smoothly
+      const cleanText = text
+        .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')
+        .replace(/\([^)]+\)/g, '')
+        .replace(/[~*•✧♥🍣🌸🍵🍱👑⚡🎯🚀]/g, ' ')
+        .trim();
+
+      if (!cleanText) return;
+
+      const u = new window.SpeechSynthesisUtterance(cleanText);
+      const voices = window.speechSynthesis.getVoices() || [];
+      const viVoice = voices.find(v => v.lang && (v.lang.toLowerCase().startsWith('vi') || v.lang.toLowerCase().includes('viet')));
+      const cuteVoice = voices.find(v => {
+        const n = (v.name || '').toLowerCase();
+        return n.includes('female') || n.includes('natural') || n.includes('mai') || n.includes('linh') || n.includes('aria');
+      });
+
+      if (viVoice) {
+        u.voice = viVoice;
+        u.lang = viVoice.lang || 'vi-VN';
+      } else if (cuteVoice) {
+        u.voice = cuteVoice;
+      }
+      u.rate = 1.05;
+      u.pitch = 1.2; // Slightly higher pitch for cute maid tone
+      window.speechSynthesis.speak(u);
+    } catch (e) {
+      console.warn('Maid TTS error:', e);
+    }
+  },
+
   // Interactive Mascot quote cycler
   interactMascot() {
     const bubble = document.getElementById('dsh-mascot-text');
@@ -196,6 +232,7 @@ const HarnessOS = {
         bubble.textContent = next;
         bubble.style.opacity = '1';
         bubble.style.transform = 'scale(1)';
+        this.speakMaid(next);
       }, 150);
     }
   },
@@ -232,8 +269,8 @@ const HarnessOS = {
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
       const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
       const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
-      el.style.bottom = ${newBottom}px;
-      el.style.right = ${newRight}px;
+      el.style.bottom = `${newBottom}px`;
+      el.style.right = `${newRight}px`;
     };
 
     const onMouseUp = (e) => {
@@ -260,8 +297,8 @@ const HarnessOS = {
       const dx = touch.clientX - startX;
       const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
       const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
-      el.style.bottom = ${newBottom}px;
-      el.style.right = ${newRight}px;
+      el.style.bottom = `${newBottom}px`;
+      el.style.right = `${newRight}px`;
     }, { passive: true });
   }
 };

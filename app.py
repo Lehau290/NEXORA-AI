@@ -49,6 +49,15 @@ def create_app():
     def index():
         return render_template("index.html")
 
+    # Favicon handlers
+    @app.route("/favicon.ico")
+    def favicon_ico():
+        return send_from_directory(os.path.join(app.root_path, "static"), "favicon.ico", mimetype="image/vnd.microsoft.icon")
+
+    @app.route("/favicon.svg")
+    def favicon_svg():
+        return send_from_directory(os.path.join(app.root_path, "static"), "favicon.svg", mimetype="image/svg+xml")
+
     # System Status & Health Check
     @app.route("/api/system/status", methods=["GET"])
     def system_status():
