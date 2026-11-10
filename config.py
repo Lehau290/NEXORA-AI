@@ -24,7 +24,7 @@ class Config:
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
     DEFAULT_AI_PROVIDER = os.getenv("DEFAULT_AI_PROVIDER", "gemini")
-    DEFAULT_AI_MODEL = os.getenv("DEFAULT_AI_MODEL", "gemini-2.0-flash")
+    DEFAULT_AI_MODEL = os.getenv("DEFAULT_AI_MODEL", "gemini-flash-lite-latest")
 
     # Host & Port
     HOST = os.getenv("HOST", "0.0.0.0")

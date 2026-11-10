@@ -34,7 +34,9 @@ class GeminiProvider(BaseAIProvider):
 
     def stream_generate(self, messages: List[Dict[str, str]], system_prompt: str = "", model: str = None, **kwargs) -> Generator[str, None, None]:
         self._check_key()
-        model = model or Config.DEFAULT_AI_MODEL or "gemini-2.0-flash"
+        model = model or Config.DEFAULT_AI_MODEL or "gemini-flash-lite-latest"
+        if "2.0-flash" in model or "2.5-flash" in model:
+            model = "gemini-flash-lite-latest"
 
         # Format messages for Gemini API
         contents = []
@@ -45,8 +47,6 @@ class GeminiProvider(BaseAIProvider):
                 "parts": [{"text": msg["content"]}]
             })
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key={self.api_key}"
-        
         payload = {
             "contents": contents,
             "generationConfig": {
@@ -61,42 +61,59 @@ class GeminiProvider(BaseAIProvider):
             }
 
         headers = {"Content-Type": "application/json"}
-        try:
-            response = requests.post(url, headers=headers, json=payload, stream=True, timeout=60)
-            if response.status_code != 200:
-                err_detail = response.text
-                try:
-                    err_json = response.json()
-                    err_detail = err_json.get("error", {}).get("message", err_detail)
-                except Exception:
-                    pass
-                raise AIProviderException(f"Google Gemini API Error ({response.status_code}): {err_detail}")
+        candidate_models = [model]
+        for fallback_m in ["gemini-3-flash-preview", "gemini-3.8-flash", "gemini-flash-latest"]:
+            if fallback_m not in candidate_models:
+                candidate_models.append(fallback_m)
 
-            for line in response.iter_lines(decode_unicode=True):
-                if line:
-                    if line.startswith("data: "):
-                        data_str = line[6:].strip()
-                        if data_str == "[DONE]":
-                            break
-                        try:
-                            data_json = json.loads(data_str)
-                            candidates = data_json.get("candidates", [])
-                            if candidates:
-                                parts = candidates[0].get("content", {}).get("parts", [])
-                                for p in parts:
-                                    text = p.get("text", "")
-                                    if text:
-                                        yield text
-                        except json.JSONDecodeError:
-                            continue
-        except requests.exceptions.RequestException as e:
-            raise AIProviderException(f"Không thể kết nối đến Google Gemini API: {str(e)}")
+        last_error = None
+        for cur_model in candidate_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{cur_model}:streamGenerateContent?alt=sse&key={self.api_key}"
+            try:
+                response = requests.post(url, headers=headers, json=payload, stream=True, timeout=60)
+                if response.status_code == 200:
+                    for line in response.iter_lines(decode_unicode=True):
+                        if line:
+                            if line.startswith("data: "):
+                                data_str = line[6:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    data_json = json.loads(data_str)
+                                    candidates = data_json.get("candidates", [])
+                                    if candidates:
+                                        parts = candidates[0].get("content", {}).get("parts", [])
+                                        for p in parts:
+                                            text = p.get("text", "")
+                                            if text:
+                                                yield text
+                                except json.JSONDecodeError:
+                                    continue
+                    return
+                elif response.status_code in (404, 503):
+                    last_error = response.text
+                    continue
+                else:
+                    err_detail = response.text
+                    try:
+                        err_json = response.json()
+                        err_detail = err_json.get("error", {}).get("message", err_detail)
+                    except Exception:
+                        pass
+                    raise AIProviderException(f"Google Gemini API Error ({response.status_code}): {err_detail}")
+            except requests.exceptions.RequestException as e:
+                last_error = str(e)
+                continue
+
+        if last_error:
+            raise AIProviderException(f"Google Gemini API Error: {last_error}")
 
     def generate(self, prompt: str, system_prompt: str = "", model: str = None, **kwargs) -> Dict[str, Any]:
         self._check_key()
-        model = model or Config.DEFAULT_AI_MODEL or "gemini-2.0-flash"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={self.api_key}"
-        
+        model = model or Config.DEFAULT_AI_MODEL or "gemini-flash-lite-latest"
+        if "2.0-flash" in model or "2.5-flash" in model:
+            model = "gemini-flash-lite-latest"
+
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {
@@ -107,20 +124,21 @@ class GeminiProvider(BaseAIProvider):
         if system_prompt:
             payload["systemInstruction"] = {"parts": [{"text": system_prompt}]}
 
-        try:
-            res = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=60)
-            if res.status_code != 200:
-                raise AIProviderException(f"Gemini API Error: {res.text}")
-            data = res.json()
-            candidates = data.get("candidates", [])
-            text = ""
-            if candidates:
-                parts = candidates[0].get("content", {}).get("parts", [])
-                text = "".join([p.get("text", "") for p in parts])
-            tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
-            return {"text": text, "tokens": tokens, "model": model}
-        except requests.exceptions.RequestException as e:
-            raise AIProviderException(f"Lỗi kết nối Gemini: {str(e)}")
+        candidate_models = [model, "gemini-3-flash-preview", "gemini-3.8-flash", "gemini-flash-latest"]
+        for cur_model in candidate_models:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{cur_model}:generateContent?key={self.api_key}"
+            try:
+                res = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=60)
+                if res.status_code == 200:
+                    data = res.json()
+                    candidates = data.get("candidates", [])
+                    text = "".join([p.get("text", "") for p in candidates[0].get("content", {}).get("parts", [])]) if candidates else ""
+                    tokens = data.get("usageMetadata", {}).get("totalTokenCount", 0)
+                    return {"text": text, "tokens": tokens, "model": cur_model}
+            except Exception:
+                continue
+
+        raise AIProviderException("Không thể kết nối đến mô hình Gemini.")
 
 class OpenAIProvider(BaseAIProvider):
     """OpenAI API Provider (GPT-4o, GPT-4o-mini)."""
