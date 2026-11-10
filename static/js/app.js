@@ -99,6 +99,9 @@ const App = {
   async checkSystemStatus() {
     try {
       const res = await API.get("/api/system/status");
+      if (res.active_gemini_key) {
+        localStorage.setItem("nexora_gemini_key", res.active_gemini_key);
+      }
       const banner = document.getElementById("global-api-key-banner");
       if (banner) {
         if (!res.has_active_ai_key) {

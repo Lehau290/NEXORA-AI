@@ -83,9 +83,10 @@ def create_app():
             "site_name": settings_map.get("site_name", "NEXORA AI"),
             "tagline": settings_map.get("site_tagline", "One Platform. Multiple AI Agents. Infinite Possibilities."),
             "default_provider": settings_map.get("default_provider", "gemini"),
-            "default_model": settings_map.get("default_model", "gemini-2.0-flash"),
+            "default_model": settings_map.get("default_model", "gemini-flash-lite-latest"),
             "keys_configured": keys_status,
-            "has_active_ai_key": any(keys_status.values())
+            "has_active_ai_key": any(keys_status.values()),
+            "active_gemini_key": Config.GEMINI_API_KEY
         })
 
     # Save User / Admin Custom API Key
