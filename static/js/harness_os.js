@@ -232,8 +232,8 @@ const HarnessOS = {
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasMoved = true;
       const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
       const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
-      el.style.bottom = ${newBottom}px;
-      el.style.right = ${newRight}px;
+      el.style.bottom = `${newBottom}px`;
+      el.style.right = `${newRight}px`;
     };
 
     const onMouseUp = (e) => {
@@ -260,8 +260,8 @@ const HarnessOS = {
       const dx = touch.clientX - startX;
       const newBottom = Math.max(10, Math.min(window.innerHeight - 140, initialBottom - dy));
       const newRight = Math.max(10, Math.min(window.innerWidth - 120, initialRight - dx));
-      el.style.bottom = ${newBottom}px;
-      el.style.right = ${newRight}px;
+      el.style.bottom = `${newBottom}px`;
+      el.style.right = `${newRight}px`;
     }, { passive: true });
   }
 };
