@@ -25,3 +25,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Runtime logs & temporary outputs
+*.log
+outputs/
+
