@@ -333,7 +333,9 @@ def stream_chat():
                     if k_row:
                         prov_name = k_row["provider"]
                 if k_row:
-                    user_api_key = k_row["api_key_encrypted"]
+                    raw_k = k_row["api_key_encrypted"]
+                    if raw_k and "testmock" not in raw_k.lower() and len(raw_k.strip()) > 10:
+                        user_api_key = raw_k.strip()
                 db_k.close()
             except Exception:
                 pass
@@ -343,27 +345,16 @@ def stream_chat():
                 full_response_parts.append(chunk)
                 yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
 
-        except AIProviderException as e:
+        except (AIProviderException, Exception) as e:
             try:
                 fallback_prov = FreeUniversalAIProvider()
                 for chunk in fallback_prov.stream_generate(history, system_prompt=system_prompt, model=agent_model):
                     full_response_parts.append(chunk)
                     yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
-            except Exception:
-                err_msg = f"\n\n> ⚠️ **Thông báo kết nối AI**: {str(e)}\n\n*Gợi ý: Bạn có thể cập nhật API Key cá nhân trong mục Hồ sơ & Cài đặt (Profile & Settings) để tiếp tục.*"
+            except Exception as inner_e:
+                err_msg = f"\n\n> ⚠️ **Thông báo kết nối AI**: {str(inner_e or e)}\n\n*Gợi ý: Bạn có thể cập nhật API Key cá nhân trong mục Hồ sơ & Cài đặt (Profile & Settings) để tiếp tục.*"
                 full_response_parts.append(err_msg)
-                yield f"event: error\ndata: {json.dumps({'error': str(e), 'code': getattr(e, 'code', 'AI_ERR')})}\n\n"
-
-        except Exception as e:
-            try:
-                fallback_prov = FreeUniversalAIProvider()
-                for chunk in fallback_prov.stream_generate(history, system_prompt=system_prompt, model=agent_model):
-                    full_response_parts.append(chunk)
-                    yield f"event: chunk\ndata: {json.dumps({'text': chunk})}\n\n"
-            except Exception:
-                err_msg = f"\n\n> ⚠️ **Lỗi hệ thống**: {str(e)}"
-                full_response_parts.append(err_msg)
-                yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+                yield f"event: error\ndata: {json.dumps({'error': str(inner_e or e)})}\n\n"
 
         # Complete response & persist assistant message
         final_text = "".join(full_response_parts)
