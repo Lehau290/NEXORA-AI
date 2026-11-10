@@ -577,9 +577,14 @@
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Online
                 </span>
-                <span id="chat-model-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-slate-400">
-                  gemini-2.0-flash
-                </span>
+                <select id="chat-model-select" onchange="Chat.changeModel(this.value)" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-800 text-cyan-300 border border-cyan-500/30 focus:outline-none focus:border-cyan-400 cursor-pointer transition-colors" title="Chọn mô hình AI muốn sử dụng">
+                  <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash</option>
+                  <option value="deepseek-chat">🧠 DeepSeek V3.1 Pro</option>
+                  <option value="gpt-4o-mini">🚀 OpenAI GPT-4o Mini</option>
+                  <option value="claude-3-5-sonnet-20241022">🎭 Claude 3.5 Sonnet</option>
+                  <option value="universal-openai">🌐 Universal AI (Free)</option>
+                </select>
+                <span id="chat-model-badge" class="hidden">gemini-2.0-flash</span>
               </div>
               <div id="chat-header-title" class="text-xs text-slate-400 truncate max-w-sm sm:max-w-md">
                 Cuộc trò chuyện mới
