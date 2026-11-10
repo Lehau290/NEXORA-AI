@@ -506,72 +506,75 @@ const Chat = {
     const geminiKey = localStorage.getItem("nexora_gemini_key");
 
     if (geminiKey) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const candidateModels = ["gemini-flash-lite-latest", "gemini-3-flash-preview", "gemini-flash-latest"];
+      for (const curModel of candidateModels) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:streamGenerateContent?alt=sse&key=${geminiKey}`;
-        const payload = {
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.6, maxOutputTokens: 2048, topP: 0.9 }
-        };
-        let fullSysPrompt = this.currentAgent?.system_instructions || "";
-        const memContext = this.getMemoryContext();
-        if (memContext) fullSysPrompt = (fullSysPrompt ? fullSysPrompt + "\n\n" : "") + memContext;
-        if (fullSysPrompt) {
-          payload.systemInstruction = { parts: [{ text: fullSysPrompt }] };
-        }
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${curModel}:streamGenerateContent?alt=sse&key=${geminiKey}`;
+          const payload = {
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096, topP: 0.95 }
+          };
+          let fullSysPrompt = this.currentAgent?.system_instructions || "";
+          const memContext = this.getMemoryContext();
+          if (memContext) fullSysPrompt = (fullSysPrompt ? fullSysPrompt + "\n\n" : "") + memContext;
+          if (fullSysPrompt) {
+            payload.systemInstruction = { parts: [{ text: fullSysPrompt }] };
+          }
 
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
-          body: JSON.stringify(payload)
-        });
+          const res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: controller.signal,
+            body: JSON.stringify(payload)
+          });
 
-        if (res.ok) {
-          const reader = res.body.getReader();
-          const decoder = new TextDecoder("utf-8");
-          let accText = "";
-          let buf = "";
-          let hasCleared = false;
+          if (res.ok) {
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            let accText = "";
+            let buf = "";
+            let hasCleared = false;
 
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
+            while (true) {
+              const { value, done } = await reader.read();
+              if (done) break;
 
-            buf += decoder.decode(value, { stream: true });
-            const lines = buf.split("\n\n");
-            buf = lines.pop();
+              buf += decoder.decode(value, { stream: true });
+              const lines = buf.split("\n\n");
+              buf = lines.pop();
 
-            for (const line of lines) {
-              if (line.startsWith("data: ")) {
-                const dataStr = line.slice(6).trim();
-                if (dataStr === "[DONE]") break;
-                try {
-                  const parsed = JSON.parse(dataStr);
-                  const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
-                  if (text) {
-                    clearTimeout(timeoutId);
-                    if (!hasCleared) {
-                      this.clearThinking(liveBubble);
-                      if (liveBubble) liveBubble.innerHTML = "";
-                      hasCleared = true;
+              for (const line of lines) {
+                if (line.startsWith("data: ")) {
+                  const dataStr = line.slice(6).trim();
+                  if (dataStr === "[DONE]") break;
+                  try {
+                    const parsed = JSON.parse(dataStr);
+                    const text = parsed.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    if (text) {
+                      clearTimeout(timeoutId);
+                      if (!hasCleared) {
+                        this.clearThinking(liveBubble);
+                        if (liveBubble) liveBubble.innerHTML = "";
+                        hasCleared = true;
+                      }
+                      accText += text;
+                      if (liveBubble) {
+                        liveBubble.innerHTML = this.parseMarkdown(accText);
+                        this.scrollToBottom();
+                      }
                     }
-                    accText += text;
-                    if (liveBubble) {
-                      liveBubble.innerHTML = this.parseMarkdown(accText);
-                      this.scrollToBottom();
-                    }
-                  }
-                } catch (e) {}
+                  } catch (e) {}
+                }
               }
             }
+            if (accText.trim()) return;
           }
-          if (accText.trim()) return;
+        } catch (e) {
+          console.warn(`Direct Gemini stream (${curModel}) failed, trying next:`, e);
         }
-      } catch (e) {
-        console.warn("Direct Gemini stream timed out or failed:", e);
       }
     }
 
@@ -1022,6 +1025,25 @@ ORDER BY total_spent DESC;
 
     if (p.includes("kinh doanh") || p.includes("marketing") || p.includes("startup") || p.includes("kế hoạch")) {
       return `### 💼 Khung Chiến Lược Kinh Doanh & Marketing Tinh Gọn (Lean Business Model)\n\nĐể đưa một sản phẩm hoặc dự án khởi nghiệp ra thị trường thành công, bạn cần tập trung vào 4 trụ cột chính:\n\n1. **Value Proposition (Định vị giá trị cốt lõi)**: Giải quyết "nỗi đau" (pain points) nào của khách hàng mà đối thủ chưa làm tốt?\n2. **Target Audience & ICP (Chân dung khách hàng lý tưởng)**: Xác định rõ độ tuổi, hành vi, kênh tiếp cận ưu tiên (TikTok Ads, SEO, Cold Email, B2B Referral).\n3. **Mô hình Doanh Thu (Revenue Streams)**: Định giá Freemium, Subscription hàng tháng/năm, hay License trọn đời.\n4. **Phễu Chuyển Đổi (Marketing Funnel AIDA)**:\n   - *Awareness*: Thu hút chú ý qua nội dung chia sẻ giá trị cao.\n   - *Interest*: Thuyết phục người dùng dùng thử miễn phí.\n   - *Desire*: Chứng minh hiệu quả bằng Case Study & Testimonials.\n   - *Action*: Kêu gọi hành động (CTA) với ưu đãi giới hạn.\n\n*Bạn muốn xây dựng kế hoạch cụ thể cho ngành hàng hoặc ý tưởng nào?*`;
+    }
+
+    // --- 5.1 AI & MACHINE LEARNING ---
+    if (p.includes("trí tuệ nhân tạo") || p.includes("ai là gì") || p.includes("machine learning") || p.includes("deep learning") || p.includes("llm") || p.includes("học máy")) {
+      return `## 🤖 Tổng Quan Toàn Diện Về Trí Tuệ Nhân Tạo (AI)
+
+**Trí tuệ nhân tạo (Artificial Intelligence - AI)** là ngành khoa học máy tính mô phỏng trí tuệ con người trên máy móc: học tập, tư duy logic, xử lý ngôn ngữ và nhận thức không gian/thị giác.
+
+### 1. Phân loại thế hệ AI:
+- **Narrow AI (ANI)**: Giải quyết xuất sắc một tác vụ đơn lẻ (ChatGPT, nhận diện giọng nói, gợi ý video).
+- **General AI (AGI)**: Đạt mức thông tuệ ngang ngửa con người ở mọi lĩnh vực.
+- **Super AI (ASI)**: Vượt xa trí tuệ của toàn bộ nhân loại.
+
+### 2. Các trụ cột công nghệ:
+1. **Machine Learning (Học máy)**: Học từ dữ liệu qua các mô hình thống kê (Regression, Random Forest, SVM).
+2. **Deep Learning (Học sâu)**: Ứng dụng mạng nơ-ron nhiều lớp (CNN cho hình ảnh, Transformer cho ngôn ngữ).
+3. **Generative AI & LLMs**: Sinh văn bản, hình ảnh và mã nguồn đột phá (Gemini, GPT-4, Claude, DeepSeek).
+
+*Bạn muốn đi sâu vào lý thuyết thuật toán, ứng dụng cụ thể hay lộ trình học AI? Hãy nhắn cho tôi nhé!*`;
     }
 
     // --- 6. GREETINGS & INTRODUCTIONS ---
