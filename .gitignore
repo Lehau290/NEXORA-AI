@@ -25,7 +25,3 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Workspace temporary runs & nested clones
-outputs/
-NEXORA-AI/
-

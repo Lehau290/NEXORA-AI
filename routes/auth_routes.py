@@ -78,29 +78,28 @@ def register():
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json() or {}
-    raw_identifier = str(data.get("identifier", "")).strip()
-    identifier = raw_identifier.lower()  # email or username
-    password = str(data.get("password", "")).strip()
+    identifier = data.get("identifier", "").strip().lower()  # email or username
+    password = data.get("password", "")
 
-    if not raw_identifier or not password:
+    if not identifier or not password:
         return jsonify({"success": False, "error": "Vui lòng nhập Email/Username và Mật khẩu."}), 400
 
     conn = get_db()
     user = conn.execute("""
         SELECT id, full_name, email, username, password_hash, role, plan, avatar, is_active
         FROM users 
-        WHERE LOWER(email) = ? OR LOWER(username) = ?
+        WHERE email = ? OR username = ?
     """, (identifier, identifier)).fetchone()
     conn.close()
 
     if not user:
-        return jsonify({"success": False, "error": f"Không tìm thấy tài khoản '{raw_identifier}'. Vui lòng kiểm tra lại username hoặc email."}), 401
+        return jsonify({"success": False, "error": "Tài khoản hoặc mật khẩu không chính xác."}), 401
 
     if not user["is_active"]:
         return jsonify({"success": False, "error": "Tài khoản đã bị tạm khóa. Vui lòng liên hệ Admin."}), 403
 
     if not verify_password(user["password_hash"], password):
-        return jsonify({"success": False, "error": f"Mật khẩu không chính xác cho tài khoản '{raw_identifier}'. Gợi ý: mật khẩu là '123456' cho tài khoản letrunghau, 'demo123' cho demo, 'admin123' cho admin."}), 401
+        return jsonify({"success": False, "error": "Tài khoản hoặc mật khẩu không chính xác."}), 401
 
     # Update last login timestamp
     conn_up = get_db()

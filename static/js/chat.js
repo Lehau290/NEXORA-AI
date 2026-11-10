@@ -121,25 +121,7 @@ const Chat = {
       if (avatarEl) avatarEl.textContent = this.currentAgent.avatar || "🤖";
       if (nameEl) nameEl.textContent = this.currentAgent.name || "AI Assistant";
       if (modelBadgeEl) modelBadgeEl.textContent = this.currentAgent.ai_model || "gemini-2.0-flash";
-      const modelSelectEl = document.getElementById("chat-model-select");
-      if (modelSelectEl && this.currentAgent.ai_model) {
-        const cur = this.currentAgent.ai_model.toLowerCase();
-        const opt = Array.from(modelSelectEl.options).find(o => o.value.toLowerCase() === cur || cur.includes(o.value.split('-')[0].toLowerCase()));
-        if (opt) modelSelectEl.value = opt.value;
-      }
     }
-
-  changeModel(newModel) {
-    if (!this.currentAgent) {
-      this.currentAgent = { id: 1, name: "AI General Assistant", avatar: "✨", ai_model: newModel };
-    } else {
-      this.currentAgent.ai_model = newModel;
-    }
-    const modelBadgeEl = document.getElementById("chat-model-badge");
-    if (modelBadgeEl) modelBadgeEl.textContent = newModel;
-    localStorage.setItem("nexora_selected_model", newModel);
-    showToast(`Đã chuyển sang mô hình: ${newModel}`, "info");
-  },
 
     if (titleEl) {
       titleEl.textContent = title || "Cuộc trò chuyện mới";
