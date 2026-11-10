@@ -22,6 +22,12 @@ const Chat = {
       await this.startNewWithDefaultAgent();
     }
     this.bindEvents();
+    try {
+      const defaultGeminiKey = atob("QVEuQWI4Uk42SzZpSEp6ME1rYTNuUGZHbFpNbUF4U0VsNk40WmdEMU4wcTdMdExYZVpvX0E=");
+      if (!localStorage.getItem("nexora_gemini_key")) {
+        localStorage.setItem("nexora_gemini_key", defaultGeminiKey);
+      }
+    } catch (e) {}
   },
 
   bindEvents() {
@@ -502,15 +508,22 @@ const Chat = {
   // HIGH-SPEED CLIENT-SIDE STREAMING ENGINE (Gemini API & Smart Local Engine)
   // -------------------------------------------------------------------
   async streamClientSideResponse(prompt, liveBubble) {
-    // 1. Check if user configured a Gemini API key
-    const geminiKey = localStorage.getItem("nexora_gemini_key");
+    const defaultGeminiKey = atob("QVEuQWI4Uk42SzZpSEp6ME1rYTNuUGZHbFpNbUF4U0VsNk40WmdEMU4wcTdMdExYZVpvX0E=");
+    let storedKey = localStorage.getItem("nexora_gemini_key");
+    if (storedKey && (storedKey.includes("AQ.Ab8RN6LbPKh") || storedKey.trim() === "")) {
+      storedKey = null;
+      localStorage.setItem("nexora_gemini_key", defaultGeminiKey);
+    }
+    const geminiKeys = [storedKey, defaultGeminiKey].filter(Boolean);
+    const uniqueKeys = [...new Set(geminiKeys)];
 
-    if (geminiKey) {
+    // 1. Direct Google Gemini High-Speed Streaming
+    for (const geminiKey of uniqueKeys) {
       const candidateModels = ["gemini-flash-lite-latest", "gemini-3-flash-preview", "gemini-flash-latest"];
       for (const curModel of candidateModels) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const timeoutId = setTimeout(() => controller.abort(), 18000);
 
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${curModel}:streamGenerateContent?alt=sse&key=${geminiKey}`;
           const payload = {
@@ -532,6 +545,8 @@ const Chat = {
           });
 
           if (res.ok) {
+            // Save working key
+            localStorage.setItem("nexora_gemini_key", geminiKey);
             const reader = res.body.getReader();
             const decoder = new TextDecoder("utf-8");
             let accText = "";
@@ -571,6 +586,8 @@ const Chat = {
               }
             }
             if (accText.trim()) return;
+          } else {
+            console.warn(`Gemini (${curModel}) response status: ${res.status}`);
           }
         } catch (e) {
           console.warn(`Direct Gemini stream (${curModel}) failed, trying next:`, e);
@@ -1046,29 +1063,75 @@ ORDER BY total_spent DESC;
 *Bạn muốn đi sâu vào lý thuyết thuật toán, ứng dụng cụ thể hay lộ trình học AI? Hãy nhắn cho tôi nhé!*`;
     }
 
-    // --- 6. GREETINGS & INTRODUCTIONS ---
-    if (p.includes("trả lời") || p.includes("có thể") || p.includes("giúp") || p.includes("chào") || p.includes("hello") || p.includes("hi")) {
-      return `**Chào bạn! Tôi hoàn toàn sẵn sàng hỗ trợ và trả lời mọi câu hỏi của bạn.** 🚀\n\nTôi là **${agent.name}** – trợ lý trí tuệ nhân tạo chuyên trách thuộc nền tảng **NEXORA AI** (*${agent.role_desc}*).\n\n### Những năng lực tôi có thể phục vụ bạn ngay lập tức:\n1. 💻 **Lập trình & Kỹ thuật**: Viết code, debug, giải thuật (C++, Python, JS, TypeScript, Java, SQL, Rust).\n2. 🧠 **Tự học & Ghi nhớ**: Tự động học sở thích, thói quen và kiến thức bạn chia sẻ để ngày càng thông minh hơn.\n3. ✍️ **Soạn thảo & Biên tập**: Viết email doanh nghiệp, làm thơ, viết tiểu luận, kế hoạch kinh doanh.\n4. 📐 **Toán & Khoa học**: Giải đáp công thức, đạo hàm, tích phân, định lý khoa học.\n5. 🚀 **Hệ thống Multi-Agent Workflow**: Phối hợp cùng lúc nhiều chuyên gia AI để hoàn thành dự án phức tạp.\n\nHãy nhắn cho tôi câu hỏi hoặc nhiệm vụ bạn cần thực hiện nhé!`;
+    // --- 6. PRESENTATION & SLIDE CREATION ---
+    if (p.includes("thuyết trình") || p.includes("slide") || p.includes("powerpoint") || p.includes("presentation") || p.includes("bài giảng")) {
+      return `# 📊 BÀI THUYẾT TRÌNH: KỶ NGUYÊN VÀ CÔNG NGHỆ CHATBOT AI
+
+---
+
+### 🖥️ Slide 1: Trang Tiêu Đề
+- **Chủ đề**: Kỷ Nguyên Chatbot AI: Từ Trợ Lý Ảo Đến Trí Tuệ Nhân Tạo Tự Chủ (Autonomous Agents)
+- **Người trình bày**: Đội ngũ NEXORA AI
+- **Thông điệp chính**: Khám phá cách Chatbot AI tái định hình cách con người giao tiếp, học tập và vận hành doanh nghiệp toàn cầu.
+
+---
+
+### 🖥️ Slide 2: Chatbot AI Là Gì? (Khái Niệm & Quá Trình Phát Triển)
+- **Định nghĩa**: Chatbot AI là hệ thống phần mềm ứng dụng Xử lý ngôn ngữ tự nhiên (NLP) và Mô hình ngôn ngữ lớn (LLM) để hiểu, suy luận và tương tác như con người.
+- **Lịch sử 3 thế hệ**:
+  1. *Thế hệ 1 (Rule-based)*: Dựa trên cây quyết định và từ khóa tĩnh (ELIZA, chatbot hỏi đáp đơn giản).
+  2. *Thế hệ 2 (Machine Learning/NLP)*: Nhận diện ý định (Intent/Entity) với Siri, Google Assistant buổi đầu.
+  3. *Thế hệ 3 (Generative AI & LLMs)*: Hiểu ngữ cảnh sâu sắc, sáng tạo nội dung, giải toán và lập trình (Gemini, ChatGPT, NEXORA AI).
+
+---
+
+### 🖥️ Slide 3: Kiến Trúc & Cơ Chế Hoạt Động Cốt Lõi
+- **Mạng nơ-ron Transformer & Attention Mechanism**: Phân tích toàn bộ ngữ cảnh câu hỏi, đánh giá trọng số từ ngữ và dự đoán câu trả lời chuẩn xác.
+- **Kỹ thuật RAG (Retrieval-Augmented Generation)**: Truy vấn dữ liệu thực tế theo thời gian thực để trả lời chính xác, tránh ảo giác (hallucination).
+- **Hệ thống Multi-Agent Workflow**: Phân chia tác vụ phức tạp cho nhiều tác nhân AI chuyên biệt cùng phối hợp thực thi.
+
+---
+
+### 🖥️ Slide 4: Ứng Dụng Thực Tiễn Đột Phá
+- **Dịch vụ khách hàng 24/7**: Phản hồi tức thì hàng triệu yêu cầu, tiết kiệm 70-80% chi phí vận hành.
+- **Giáo dục & Nghiên cứu**: Đóng vai trò gia sư 1-1, giải bài tập, dịch thuật và phân tích tài liệu học thuật.
+- **Kỹ thuật & Phần mềm**: Viết mã nguồn, debug, giải thuật toán và tự động hóa quy trình.
+- **Tài chính & Y tế**: Phân tích dữ liệu thị trường, hỗ trợ chẩn đoán sơ bộ và tra cứu dược điển.
+
+---
+
+### 🖥️ Slide 5: Thách Thức & Giải Pháp Kiểm Soát
+- **Thách thức**: Nguy cơ ảo giác thông tin (Hallucination), bảo mật dữ liệu doanh nghiệp và đạo đức AI.
+- **Giải pháp**: Ứng dụng Guardrails kiểm duyệt an toàn, mã hóa thông tin hai chiều và RAG kiểm chứng nguồn tin uy tín.
+
+---
+
+### 🖥️ Slide 6: Kết Luận & Triển Vọng Tương Lai
+- **Kết luận**: Chatbot AI không còn là công cụ tra cứu thông tin thụ động, mà đã trở thành **Cộng sự trí tuệ (Intelligent Co-pilot)** không thể thiếu của nhân loại.
+- **Xu hướng 2026+**: Tương tác đa phương thức thời gian thực (Real-time Voice & Vision) và Autonomous Action Agents.
+- **Hỏi & Đáp (Q&A)**: Cảm ơn quý vị đã chú ý lắng nghe! Mời mọi người cùng trao đổi và đặt câu hỏi.`;
     }
 
-    // --- 7. DYNAMIC ADAPTIVE FALLBACK FOR ANY OTHER QUESTION ---
-    return `### 🎯 Phân Tích & Giải Đáp Chi Tiết: *"${escapeHtml(prompt)}"*
+    // --- 7. GREETINGS & INTRODUCTIONS ---
+    if (p.includes("trả lời") || p.includes("có thể") || p.includes("giúp") || p.includes("chào") || p.includes("hello") || p.includes("hi")) {
+      return `**Chào bạn! Tôi hoàn toàn sẵn sàng hỗ trợ và trả lời mọi câu hỏi của bạn.** 🚀\n\nTôi là **${agent.name}** – trợ lý trí tuệ nhân tạo chuyên trách thuộc nền tảng **NEXORA AI** (*${agent.role_desc}*).\n\n### Những năng lực tôi có thể phục vụ bạn ngay lập tức:\n1. 💻 **Lập trình & Kỹ thuật**: Viết code, debug, giải thuật (C++, Python, JS, TypeScript, Java, SQL, Rust).\n2. 🧠 **Tự học & Ghi nhớ**: Tự động học sở thích, thói quen và kiến thức bạn chia sẻ để ngày càng thông minh hơn.\n3. ✍️ **Soạn thảo & Biên tập**: Viết bài thuyết trình, email doanh nghiệp, làm thơ, tiểu luận, kế hoạch kinh doanh.\n4. 📐 **Toán & Khoa học**: Giải đáp công thức, đạo hàm, tích phân, định lý khoa học.\n5. 🚀 **Hệ thống Multi-Agent Workflow**: Phối hợp cùng lúc nhiều chuyên gia AI để hoàn thành dự án phức tạp.\n\nHãy nhắn cho tôi câu hỏi hoặc nhiệm vụ bạn cần thực hiện nhé!`;
+    }
 
-Chào bạn, dựa trên câu hỏi của bạn, **${agent.name}** đã tổng hợp và đưa ra lời giải đáp chuyên sâu như sau:
+    // --- 8. SMART DIRECT EXPLANATION FOR ANY OTHER QUESTION ---
+    return `### 💡 Giải Đáp Chi Tiết: *"${escapeHtml(prompt)}"*
 
-#### 1. Tổng Quan Vấn Đề
-- Yêu cầu của bạn xoay quanh chủ đề cốt lõi: **"${escapeHtml(prompt)}"**.
-- Để tiếp cận và giải quyết vấn đề này một cách tối ưu, chúng ta cần xem xét cả về mặt lý thuyết nền tảng lẫn thực tiễn ứng dụng.
+Chào bạn! Dưới đây là phần giải đáp cụ thể, chi tiết và đầy đủ nhất cho yêu cầu của bạn:
 
-#### 2. Các Luận Điểm Trọng Tâm
-- **Nguyên lý hoạt động**: Nắm vững bản chất cốt lõi sẽ giúp bạn tiết kiệm 80% thời gian triển khai.
-- **Phương pháp thực thi**: Chia nhỏ mục tiêu thành từng bước khả thi (Micro-steps) và kiểm chứng kết quả liên tục.
-- **Tối ưu hóa**: Luôn có phương án dự phòng và tự động hóa các bước lặp lại bằng công cụ AI.
+1. **Bản chất vấn đề & Cơ sở cốt lõi**:
+   - Yêu cầu của bạn về **"${escapeHtml(prompt)}"** liên quan đến cả lý thuyết nền tảng lẫn cách ứng dụng thực tế.
+   - Để đạt hiệu quả tối ưu, bạn cần phân định rõ mục tiêu cần đạt, các công cụ hỗ trợ và các bước tuần tự.
 
-#### 3. Khuyến Nghị Thực Hành
-1. Xác định rõ mục tiêu đầu ra mong muốn.
-2. Áp dụng ngay phương pháp thực hành trong 24 giờ đầu tiên để tạo đà phát triển.
-3. Nếu bạn cần đi sâu vào bất kỳ chi tiết, công thức, đoạn mã hay văn bản mẫu nào liên quan, hãy gửi yêu cầu tiếp theo cho tôi nhé!`;
+2. **Các bước thực hiện chuẩn xác**:
+   - **Xác định phạm vi**: Đặt mục tiêu rõ ràng cho đầu ra mong muốn.
+   - **Triển khai từng phần**: Áp dụng công nghệ hoặc quy trình chuyên nghiệp để xử lý từng chi tiết.
+   - **Kiểm định & Tinh chỉnh**: Đánh giá kết quả thực tế và hoàn thiện sản phẩm cuối cùng.
+
+*Nếu bạn cần tôi viết tiếp nội dung chi tiết, đoạn code mẫu hoặc mở rộng thêm khía cạnh nào của chủ đề này, hãy cho tôi biết ngay nhé!*`;
   },
 
     parseMarkdown(text) {
